@@ -1,0 +1,17 @@
+{
+  "extName": {
+    "message": "HoverPrompt – Image to Prompt",
+    "description": "Extension name in the store and browser"
+  },
+  "extDescription": {
+    "message": "Turn any image on the web into a detailed AI prompt in one click, generate new images and keep every prompt in your library.",
+    "description": "Short store description (up to 132 characters)"
+  },
+  "actionTitle": {
+    "message": "Open HoverPrompt"
+  },
+  "menuAnalyze": {
+    "message": "Get a prompt for this image (English & Chinese)",
+    "description": "Right-click menu item on images"
+  }
+}

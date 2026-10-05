@@ -1,0 +1,62 @@
+/* ChatGPT image studio: page layout only. Colours, type, glass, controls and cards come from plugin-kit.css. */
+.top,.dock,.layout{position:relative;z-index:1}
+/* the brand row and the prompt dock stay on top while the history scrolls under them; the lower edge fades out */
+.head,.ip-page>.head{position:sticky;top:0;z-index:6;padding-bottom:18px;margin-bottom:-18px;background:color-mix(in srgb,var(--canvas) 58%,transparent);backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px) saturate(1.3);-webkit-mask-image:linear-gradient(#000 calc(100% - 18px),transparent);mask-image:linear-gradient(#000 calc(100% - 18px),transparent)}
+.head .top{padding-bottom:10px}
+.dock{padding:4px 28px 6px}
+.dock .composer,.dock .refs,.dock .notice,.plan,.settings{max-width:1120px;margin-left:auto;margin-right:auto}.dock .refs{margin-top:10px}
+.plan{max-width:1120px;margin:8px auto 0;font-size:12px;color:var(--muted)}
+.settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-width:1120px;margin:10px auto 0;padding:12px;border-radius:22px;background:var(--glass-strong)}
+.sessions h2{margin:0;font-family:var(--display);font-weight:700;letter-spacing:.2px}
+.ratio-row{display:flex;gap:18px;align-items:center}
+.ratio-preview{width:120px;height:96px;display:grid;place-items:center;position:relative;flex:none}
+.ratio-preview i{display:block;border:2px solid var(--text);border-radius:8px;transition:width .15s,height .15s}
+.ratio-preview span{position:absolute;font-family:var(--display);font-size:18px;font-weight:700}
+.ratio-controls{flex:1;display:flex;flex-direction:column;gap:10px;min-width:0}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:22px;padding:8px 28px 60px;max-width:1540px;margin:0 auto}
+body.sessions-hidden .layout{grid-template-columns:minmax(0,1fr)}
+.feed-wrap{min-width:0;display:flex;flex-direction:column;gap:18px}
+.feed{display:flex;flex-direction:column;gap:18px;min-width:0}
+.more{align-self:center;border-radius:999px;padding:8px 18px}
+.sessions{position:sticky;top:calc(var(--head-h,130px) + 8px);align-self:start;max-height:calc(100vh - var(--head-h,130px) - 24px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:16px;border-radius:22px;display:flex;flex-direction:column;gap:10px}
+.sessions-head{display:flex;justify-content:space-between;align-items:center}.sessions h2{font-size:20px}
+.session{display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:8px 10px;border-radius:14px;background:color-mix(in srgb,var(--field) 70%,transparent);font-size:13px}
+.side-title{margin:6px 0 0;font-family:var(--display);font-weight:700;font-size:16px}
+.log{display:flex;flex-direction:column;gap:2px;padding:8px 10px;border-radius:14px;background:color-mix(in srgb,var(--field) 70%,transparent);font-size:12px}
+.log p{margin:0;font-size:13px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.log .row{display:flex;justify-content:space-between;gap:8px;color:var(--muted)}
+.log .failed{color:var(--error)}
+.ref .state{position:absolute;left:4px;bottom:4px;min-width:18px;height:18px;border-radius:9px;display:grid;place-items:center;padding:0 5px;font-size:11px;background:#000a;color:#fff}.ref .state.library{background:var(--success)}.ref .state.uploading{background:var(--warning);color:#000}.ref .state.failed{background:var(--error)}
+.ref.file .state{position:static;margin-left:2px}
+.sync-button{width:100%}
+.capsule{border:1px solid color-mix(in srgb,var(--error) 50%,transparent);background:color-mix(in srgb,var(--error) 12%,transparent);color:var(--error);border-radius:999px;padding:1px 10px;font-size:12px;font-weight:650;margin-left:8px}.capsule:hover{background:var(--error);color:#fff}
+.status{justify-content:flex-start}.status .hint{margin-left:auto}
+input.number{width:100%;border:1px solid var(--line);background:var(--glass-strong);border-radius:10px;padding:6px 8px}
+.session small{grid-column:1/-1;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:1000px){.layout{grid-template-columns:minmax(0,1fr)}.sessions{position:static;order:-1}.batch{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:700px){.top,.dock,.layout{padding-left:16px;padding-right:16px}.settings{grid-template-columns:minmax(0,1fr)}.ratio-row{flex-direction:column;align-items:stretch}.ratio-preview{align-self:center}.brand em{display:none}}
+
+/* inside the settings page */
+.in-settings body{background:transparent}.in-settings .orbs{display:none}.in-settings .brand{display:none}.in-settings .top{justify-content:flex-end;padding-top:8px}
+.in-settings .head,.in-settings .ip-page>.head{background:color-mix(in srgb,var(--canvas) 40%,transparent)}
+
+/* a generated image: click opens the large view; "use as reference" waits in the top-left corner */
+.cell-pick{cursor:zoom-in}
+.cell-ref{position:absolute;top:8px;left:8px;display:grid;place-items:center;width:30px;height:30px;border-radius:10px;border:0;padding:0;background:#000000a0;color:#fff;backdrop-filter:blur(8px);opacity:0;transition:opacity .15s}.cell-ref svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+.cell:hover .cell-ref,.cell:focus-within .cell-ref{opacity:1}.cell-ref:hover{background:var(--accent);color:var(--accent-ink)}
+/* large view: the image with its info and actions underneath */
+.viewer[open]{display:flex;flex-direction:column;align-items:center;gap:10px;overflow:visible}.viewer img{max-height:84vh}
+.viewer-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;padding:6px;border-radius:16px;background:#000000a0;backdrop-filter:blur(10px)}.viewer-bar button{border-radius:12px;padding:7px 14px;font-size:13px}.viewer-bar button:disabled{opacity:.45}
+.viewer-info{color:#fff;font-size:12px;padding:0 8px;font-variant-numeric:tabular-nums}
+/* inside the settings page: no brand row; the run chips sit in one line under the prompt */
+.dock-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;max-width:1120px;margin:8px auto 0}.dock-meta .plan{margin:0 auto 0 0;max-width:none}.dock-meta .meter-chip,.dock-meta .chip-button{font-size:12px;min-height:28px;padding:3px 10px}
+.in-settings .dock{padding-top:10px}
+
+/* the post-to-community dialog */
+.community-share{width:min(600px,calc(100vw - 32px));border:0;border-radius:22px;padding:22px;background:var(--glass-strong,#fff);color:var(--text);box-shadow:0 30px 90px #00000052}
+.community-share::backdrop{background:#0c0a1499}
+.community-share form{display:flex;flex-direction:column;gap:10px}.community-share h2{margin:0 0 4px;font-size:20px}
+.community-share input,.community-share textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:var(--field);color:var(--text);font:inherit}
+.community-share .share-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px}.community-share .share-strip img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px}
+.community-share .share-actions{display:flex;justify-content:flex-end;gap:8px}
+.community-share .share-status:empty{display:none}

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>插件样式 · HoverPrompt</title>
+  <link rel="icon" href="icons/icon-32.png">
+  <link rel="stylesheet" href="plugin-kit.css">
+  <link rel="stylesheet" href="plugin-kit-demo.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand"><img src="icons/icon-32.png" alt=""><span><b>HoverPrompt</b><em data-t="插件样式|Plugin kit"></em></span></div>
+    <div class="top-actions">
+      <span class="meter-chip glass" data-t="默认：ChatGPT 生图工作台风格|Default: the ChatGPT image studio style"></span>
+      <button id="appearance" type="button" class="icon-button glass" data-t-title="切换深浅色|Switch light or dark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+    </div>
+  </header>
+
+  <main class="kit">
+    <section class="intro glass">
+      <h1 class="title" data-t="插件页面怎么写|How to build a plugin page"></h1>
+      <p data-t="插件页面引入 plugin-kit.css 和 plugin-kit.js，调用 PluginKit.start()，就会跟随扩展的深浅色、主题色和语言，并带上色球背景。下面每个组件都可以直接复制代码。|Include plugin-kit.css and plugin-kit.js and call PluginKit.start(): the page follows the extension's light/dark mode, theme colour and language, with the colour orbs behind it. Copy any component below."></p>
+      <pre class="code"><code>&lt;link rel="stylesheet" href="plugin-kit.css"&gt;
+&lt;script src="plugin-kit.js"&gt;&lt;/script&gt;
+&lt;script src="my-plugin.js"&gt;&lt;/script&gt;   // PluginKit.start().then(({zh}) =&gt; …)</code></pre>
+      <p class="hint" data-t="界面文字写在 data-t 属性里，中文在前、英文在后，中间用竖线隔开，PluginKit 会按当前语言填入；颜色只用变量（--accent、--text、--muted、--line、--surface、--field、--glass、--success、--warning、--error），深浅色会自动切换。|Put interface text in a data-t attribute, Chinese first and English second, separated by a vertical bar; PluginKit fills in the current language. Use only the colour variables (--accent, --text, --muted, --line, --surface, --field, --glass, --success, --warning, --error) so light and dark both work."></p>
+    </section>
+
+    <section class="demo"><h2 class="title" data-t="提示词栏|Composer"></h2>
+      <div class="demo-live">
+<div class="composer glass">
+  <button type="button" class="icon-button" title="Attach"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5 12.6 20a5.5 5.5 0 0 1-7.8-7.8l8.5-8.5a3.7 3.7 0 0 1 5.2 5.2l-8.5 8.5a1.8 1.8 0 0 1-2.6-2.6l7.8-7.8"/></svg></button>
+  <textarea rows="1" placeholder="Describe the image…"></textarea>
+  <button type="button" class="primary">Generate 4</button>
+</div>
+      </div>
+    </section>
+
+    <section class="demo"><h2 class="title" data-t="按钮与链接|Buttons and links"></h2>
+      <div class="demo-live">
+<div class="row">
+  <button type="button" class="primary">Primary</button>
+  <button type="button" class="primary stop">Stop</button>
+  <button type="button" class="secondary">Secondary</button>
+  <button type="button" class="chip-button glass"><span class="dot ready"></span>Status chip</button>
+  <button type="button" class="link">Link action</button>
+</div>
+      </div>
+    </section>
+
+    <section class="demo"><h2 class="title" data-t="提示条|Notices"></h2>
+      <div class="demo-live">
+<p class="notice" role="status">Something went wrong: the limit was reached.</p>
+<p class="notice info" role="status">Saved to the library.</p>
+      </div>
+    </section>
+
+    <section class="demo"><h2 class="title" data-t="设置面板|Settings panel"></h2>
+      <div class="demo-live">
+<div class="panel">
+  <h3>Aspect ratio</h3>
+  <div class="segmented"><button type="button" aria-pressed="true">Portrait</button><button type="button" aria-pressed="false">Square</button><button type="button" aria-pressed="false">Landscape</button></div>
+  <label class="field"><span>Images</span><input type="range" min="1" max="10" value="4"><output>4</output></label>
+  <label class="field wide"><span>Prefix</span><select><option>No prefix</option><option>Film look</option></select></label>
+  <label class="check"><input type="checkbox" checked><span>Attach references to every message</span></label>
+  <p class="hint">A short explanation under the controls.</p>
+</div>
+      </div>
+    </section>
+
+    <section class="demo"><h2 class="title" data-t="缩略图条（可拖拽排序）|Thumbnail strip (drag to reorder)"></h2>
+      <div class="demo-live">
+<div class="refs">
+  <div class="ref" tabindex="0"><img src="icons/icon-128.png" alt=""><b>1</b><button type="button" aria-label="Remove">×</button></div>
+  <div class="ref" tabindex="0"><img src="icons/icon-128.png" alt=""><b>2</b><button type="button" aria-label="Remove">×</button></div>
+  <div class="ref file"><b>MD</b><span>poster-style.md</span><button type="button" aria-label="Remove">×</button></div>
+  <span class="count">3 / 10 files</span>
+</div>
+      </div>
+    </section>
+
+    <section class="demo"><h2 class="title" data-t="结果卡片|Result card"></h2>
+      <div class="demo-live">
+<article class="batch glass">
+  <div class="grid">
+    <button type="button" class="cell done"><img src="icons/icon-128.png" alt="Generated image 1"></button>
+    <div class="cell pending"><span class="pct">42%</span><span class="stage">Drawing</span></div>
+    <div class="cell failed">The reply had no image</div>
+  </div>
+  <div class="meta">
+    <div class="status"><span class="state">Generating 42%</span><span class="hint">07:53</span></div>
+    <div class="bar"><i style="width:42%"></i></div>
+    <p class="prompt-text">A quiet street on a rainy night</p>
+    <div class="chips"><span>ar 3:4</span><span>2+3 images</span></div>
+    <div class="actions"><button type="button" class="act"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12V4h8l10 10-8 8z"/></svg>Reuse prefix</button><button type="button" class="act" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l5 5v13H6z"/></svg>Reuse skill</button><button type="button" class="act"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>Rerun</button></div>
+  </div>
+</article>
+      </div>
+    </section>
+
+    <section class="demo"><h2 class="title" data-t="空状态|Empty state"></h2>
+      <div class="demo-live">
+<div class="empty glass"><b>Start with a prompt</b>Results and history appear here.</div>
+      </div>
+    </section>
+  </main>
+  <script src="plugin-kit.js"></script>
+  <script src="plugin-kit-demo.js"></script>
+</body>
+</html>

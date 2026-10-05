@@ -1,0 +1,10 @@
+/* Content-first settings: explain when changes take effect, near the control. */
+(()=>{
+ const $=id=>document.getElementById(id),embedded=new URLSearchParams(location.search).get('embed')==='1';
+ const hints={concurrency:'同时运行多少张图片；超过数量的任务会排队。 / Images running at once. Additional tasks wait in the queue.',requestsPerMinute:'控制发送速度，避免触发服务商频率限制。 / Limits how fast requests are sent to your provider.',timeoutSeconds:'从实际发送请求开始计时，排队时间不计入超时。 / Starts when a request is sent; queue time is excluded.',maxRetries:'首次请求以外的重试次数。设为 0 表示不自动重试。 / Extra attempts after the first request. Set 0 to disable retries.',baseUrl:'填写服务商的基础地址，通常以 /v1 结尾；不要粘贴完整聊天接口。 / Enter the provider base URL, usually ending in /v1, rather than the full chat endpoint.',apiKey:'仅保存在当前浏览器，不随云端同步或历史导出上传。 / Stays in this browser. Never included in cloud sync or library exports.',imageMinSize:'自动略过头像、图标等小图；不会限制手动上传。 / Skips small avatars and icons. Manual uploads are unaffected.',historyDisplayMode:'决定展开历史时显示哪些语言；快捷复制仍使用排序第一的可用版本。 / Controls expanded history. Quick copy uses the first available language in your priority list.'};
+ for(const [id,text] of Object.entries(hints)){const field=$(id);if(!field)continue;const note=document.createElement('small');note.className='field-help';note.textContent=text;field.closest('label')?.append(note);field.setAttribute('aria-describedby',id+'Help');note.id=id+'Help';}
+ $('focus').placeholder='Composition, lighting, style…';$('focus').closest('label').firstChild.textContent='识别重点（可选） / Focus (optional)';
+ const badges=null;
+ const sourcePane=document.querySelector('[data-settings-pane="sources"]');sourcePane.classList.add('source-form');document.querySelector('[data-settings-pane="generation"]').classList.add('advanced-form');
+ document.addEventListener('keydown',event=>{const target=event.target;if(target instanceof HTMLElement&&target.matches('input,textarea,select'))return;if(event.key==='/'&&!$('historySection').hidden){event.preventDefault();$('historySearch').focus();}if(event.key==='Escape'&&globalThis.historySelection?.size)$('clearSelection').click();});
+})();

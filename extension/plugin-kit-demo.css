@@ -1,0 +1,9 @@
+/* Plugin kit sample page layout (not part of the kit). */
+.kit{position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:8px 28px 80px;display:flex;flex-direction:column;gap:22px}
+.intro{padding:22px 24px;border-radius:22px}.intro h1{margin:0 0 6px}
+.demo{display:flex;flex-direction:column;gap:10px}.demo h2{margin:0}
+.demo-live{padding:18px;border-radius:18px;border:1px dashed var(--line)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.code{margin:0;padding:12px 14px;border-radius:14px;background:color-mix(in srgb,var(--field) 80%,transparent);border:1px solid var(--line);font:12px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto}
+.copy{align-self:flex-start}
+@media (max-width:700px){.kit{padding:8px 16px 60px}}

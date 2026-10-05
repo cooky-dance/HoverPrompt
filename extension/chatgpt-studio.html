@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Companion Studio · HoverPrompt</title>
+  <link rel="icon" href="icons/icon-32.png">
+  <link rel="stylesheet" href="plugin-kit.css">
+  <link rel="stylesheet" href="chatgpt-studio.css">
+</head>
+<body>
+  <div class="head" id="head">
+  <header class="top">
+    <div class="brand"><img src="icons/icon-32.png" alt=""><span><b>HoverPrompt</b><em data-t="Companion Studio|Companion Studio"></em></span></div>
+    <div class="top-actions">
+      <span id="runningChip" class="meter-chip glass" hidden></span>
+      <span id="uploadMeter" class="meter-chip glass" hidden></span>
+      <button id="sessionsToggle" type="button" class="chip-button glass" aria-expanded="true" aria-controls="sessions"></button>
+      <button id="appearance" type="button" class="icon-button glass" data-t-title="切换深浅色|Switch light or dark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+    </div>
+  </header>
+
+  <section class="dock" aria-label="Prompt">
+    <div class="composer glass" id="composer">
+      <label class="attach icon-button" data-t-title="添加参考图（也可以 Ctrl+V 粘贴或拖进来）|Add references (or paste with Ctrl+V, or drop here)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5 12.6 20a5.5 5.5 0 0 1-7.8-7.8l8.5-8.5a3.7 3.7 0 0 1 5.2 5.2l-8.5 8.5a1.8 1.8 0 0 1-2.6-2.6l7.8-7.8"/></svg><input id="refInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden></label>
+      <textarea id="prompt" rows="1" data-t-placeholder="描述你想生成的画面…（Ctrl+Enter 生成，Ctrl+V 粘贴参考图）|Describe the image… (Ctrl+Enter to generate, Ctrl+V to paste references)"></textarea>
+      <button id="settingsToggle" type="button" class="icon-button" aria-expanded="false" aria-controls="settings" data-t-title="生成设置|Generation settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></button>
+      <button id="generate" type="button" class="primary"></button>
+    </div>
+    <div id="attachments" class="refs" hidden></div>
+    <p id="plan" class="plan" hidden></p>
+    <p id="notice" class="notice" role="status" hidden></p>
+
+    <div id="settings" class="settings glass" hidden>
+      <div class="panel">
+        <h3 data-t="画面比例|Aspect ratio"></h3>
+        <div class="ratio-row"><div class="ratio-preview"><i id="ratioBox"></i><span id="ratioText"></span></div>
+          <div class="ratio-controls"><div class="segmented" id="orientation"></div><input id="ratioSlider" type="range" min="0" step="1" data-t-aria="画面比例|Aspect ratio"><div id="ratioTicks" class="ticks"></div></div></div>
+      </div>
+      <div class="panel">
+        <h3 data-t="数量与会话|Images and conversations"></h3>
+        <label class="field"><span data-t="总张数|Total images"></span><input id="count" type="range" min="1" max="40"><output id="countOut"></output></label>
+        <label class="field"><span data-t="会话数|Conversations"></span><input id="sessionCount" type="range" min="1" max="10"><output id="sessionOut"></output></label>
+        <p class="hint" data-t="张数平均分给各个会话，每个会话只发一条消息，开头写 n=张数（一条最多 10 张）；少出的张数会在同一会话自动补发一次。|Images are split evenly; each conversation sends one message starting with n=count (at most 10 per message); missing images are requested once more in the same conversation."></p>
+        <label class="field"><span data-t="速率（条/分钟，0 不限）|Rate (messages/min, 0 = no limit)"></span><input id="rate" type="number" min="0" max="120" step="1" class="number"><output></output></label>
+        <label class="check"><input id="thinking" type="checkbox"><span data-t="把思考强度调到最高（n= 更可靠；模型没有这个选项时跳过）|Set thinking effort to the highest (n= is followed more reliably; skipped when the model has no such option)"></span></label>
+      </div>
+      <div class="panel">
+        <h3 data-t="ChatGPT 项目|ChatGPT project"></h3>
+        <label class="field wide"><span data-t="会话打开方式|Where conversations open"></span><select id="windowMode"><option value="window" data-t="单独的后台窗口（默认，重复使用同一个）|A separate background window (default, reused)"></option><option value="tabs" data-t="当前窗口的后台标签页|Background tabs in this window"></option></select></label>
+        <label class="field wide"><span data-t="项目链接（可选）|Project link (optional)"></span><input id="project" type="url" placeholder="https://chatgpt.com/g/g-p-…/project"></label>
+        <label class="field wide"><span data-t="资料库文件夹链接（可选，用于预上传）|Library folder link (optional, for pre-uploads)"></span><input id="libraryFolder" type="url" placeholder="https://chatgpt.com/library/d/…?tab=folders"></label>
+        <p class="hint" data-t="获取方法：在 ChatGPT 左侧打开「资料库」，进入（或新建）一个文件夹，复制浏览器地址栏的链接粘贴到这里。填了之后，参考图和 Skill 一放进来就开始上传到这个文件夹。|How to get it: in ChatGPT open Library in the sidebar, open (or create) a folder and copy the address bar link here. Then references and the skill start uploading to that folder as soon as you add them."></p>
+        <label class="check"><input id="mention" type="checkbox"><span data-t="已上传过的文件用 @文件名 引用，不再重复上传（省上传次数）|Refer to files already uploaded with @name instead of uploading again (saves uploads)"></span></label>
+        <label class="check"><input id="merge" type="checkbox"><span data-t="会话窗口合并：优先在已打开的会话里继续生成|Reuse conversations: keep generating in conversations already open"></span></label>
+        <label class="field" id="roundsField"><span data-t="每个会话最多轮次|Max rounds per conversation"></span><input id="maxRounds" type="range" min="1" max="30"><output id="roundsOut"></output></label>
+        <p class="hint" data-t="超过最多轮次后，这个会话会换成新会话；关闭合并时每次生成都用新会话。|After the maximum, that conversation moves to a new one; with reuse off, every run starts new conversations."></p>
+        <label class="check"><input id="everyRef" type="checkbox"><span data-t="每条消息都附参考图和 Skill（默认只附在每个会话的第一条）|Attach references and the skill to every message (default: each conversation's first message)"></span></label>
+      </div>
+      <div class="panel">
+        <h3 data-t="前缀与 Skill|Prefix and skill"></h3>
+        <label class="field wide"><span data-t="文字前缀（放在提示词最前面）|Text prefix (goes first)"></span><select id="prefix"></select></label>
+        <label class="field wide"><span data-t="Skill 文件（作为 .md 附件上传）|Skill file (uploaded as .md)"></span><select id="skill"></select></label>
+        <p class="hint" data-t="Skill 来自本地配置和账号里的 Skill；它作为 1 个文件上传，计入每条 10 个和每 3 小时 80 个的上传数量。|Skills come from your local profiles and your account; each is uploaded as 1 file and counts toward the 10-per-message and 80-per-3-hours limits."></p>
+      </div>
+    </div>
+  </section>
+  </div>
+
+  <div class="layout">
+    <main class="feed-wrap"><div id="feed" class="feed" aria-live="polite"></div><button id="more" type="button" class="more glass" hidden data-t="加载更早的记录|Load earlier runs"></button></main>
+    <aside id="sessions" class="sessions glass" aria-label="Conversations">
+      <div class="sessions-head"><h2 data-t="会话|Conversations"></h2><button id="closeSessions" type="button" class="link" data-t="全部关闭|Close all"></button></div>
+      <button id="syncConversations" type="button" class="secondary sync-button" data-t="同步会话到历史|Sync conversations to history"></button>
+      <p class="hint" data-t="读取记住的每个会话（和项目里的会话），把没取回的图补进历史，全部存在本地。|Reads every remembered conversation (and the project's), adds images missing from the history and keeps them locally."></p>
+      <div id="sessionList"></div>
+      <div id="historyBox" hidden><h3 class="side-title" data-t="会话记录|Conversation log"></h3><div id="historyList"></div></div>
+      <p class="hint" data-t="会话在一个单独的窗口里打开。第一次使用时请在那个窗口登录 ChatGPT。|Conversations open in a separate window. Sign in to ChatGPT there the first time."></p>
+    </aside>
+  </div>
+
+  <dialog id="viewer" class="viewer"><img id="viewerImage" alt=""><div class="viewer-bar"><span id="viewerInfo" class="viewer-info"></span><button id="viewerRef" type="button" data-t="加为参考图|Use as a reference"></button><button id="viewerCopy" type="button" data-t="复制提示词|Copy prompt"></button><button id="viewerDownload" type="button" class="primary" data-t="下载原图|Download the original"></button></div><form method="dialog"><button class="viewer-close" data-t-aria="关闭|Close">×</button></form></dialog>
+  <script src="record-kinds.js"></script>
+  <script src="plugin-kit.js"></script>
+  <script src="profiles.js"></script>
+  <script src="community-share.js"></script>
+  <script src="chatgpt-studio.js"></script>
+</body>
+</html>

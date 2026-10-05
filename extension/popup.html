@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HoverPrompt</title>
+  <link rel="stylesheet" href="style.css"><link rel="stylesheet" href="design.css">
+</head>
+<body>
+  <main>
+    <header><h1>HoverPrompt <small>2.5.2</small></h1></header>
+    <section id="settings" class="settings-card"><h2>设置 / Settings</h2><nav class="settings-tabs"><button data-settings-tab="account">账号与同步 / Account</button><button data-settings-tab="generation">生成 / Generation</button><button data-settings-tab="sources" class="active">API 来源 / Sources</button><button data-settings-tab="interface">界面 / Interface</button></nav>
+<div data-settings-pane="account" hidden><label>运行模式 / Service mode<select id="serviceMode"><option value="local">离线 · 个人 API / Local · Personal API</option><option value="cloud">云端服务 · 账号额度 / Cloud · Account credits</option></select></label><label>云端服务地址 / Cloud service URL<input id="cloudUrl" placeholder="https://imageprompt.example.com"></label><label class="checkbox-setting"><input type="checkbox" id="syncImages">同步图片（未勾选仅同步提示词） / Sync images</label><div class="setting-actions"><button id="saveCloud">保存 / Save</button><button id="cloudLogin">注册或登录 / Sign in</button><button id="cloudAccount">账号与订阅 / Account</button><button id="refreshCloud">刷新额度 / Refresh</button><button id="claimGift">领取安装赠送 / Claim install gift</button><button id="syncCloud">立即同步 / Sync now</button><button id="cloudLogout">退出 / Sign out</button></div><p id="cloudStatus" class="account-summary" role="status"></p><p class="hint">本地 API 不受云端月额度限制。同步由你主动发起，不上传个人 API 密钥。 / Personal API is independent of cloud quota. Sync is manual; API keys stay local.</p></div>
+<div data-settings-pane="generation" hidden><h3>提示词语言版本 / Prompt languages</h3><p class="hint">从上到下为展示和快捷复制优先级，第一种可用语言默认展示。勾选项控制生成语言。 / Order controls display and quick-copy priority; the first available language is the default. Checkboxes control generation.</p><div id="languageRows"></div><div class="language-add"><label>语言名称 / Language name<input id="languageName" placeholder="日本語 / Japanese"></label><label>语言代码 / Language code<input id="languageCode" placeholder="ja, fr, zh-TW"></label><button id="addLanguage">新增语言 / Add language</button></div><p class="hint">每次可生成 1–12 种语言；自定义名称与代码，不改变界面语言。 / Generate 1–12 versions independently of UI language.</p><div class="history-language-settings"><h3>历史提示词展示 / History prompt display</h3><label>默认展示方式 / Display mode<select id="historyDisplayMode"><option value="default">仅默认优先语言 / Preferred language</option><option value="all">全部语言 / All languages</option><option value="selected">勾选语言 / Selected languages</option></select></label><div id="historyLanguageRows" hidden></div><p class="hint">历史图片快捷复制始终使用第一种可用的优先语言。 / The image quick-copy button always copies the first available preferred language.</p></div><div class="setting-actions"><button id="saveLanguages" type="button">保存语言设置 / Save languages</button><button id="cancelLanguages" type="button" class="secondary">取消更改 / Discard</button><span id="languageSaveStatus" role="status" class="hint"></span></div><div id="generationControls"></div></div>
+<div data-settings-pane="interface" hidden><label>界面语言 / Interface language<select id="uiLanguage"><option value="zh-CN">简体中文</option><option value="en">English</option><option value="bilingual">中英对照 / Bilingual</option></select></label><div id="interfaceControls"></div>
+<div class="image-filter-settings"><label><input type="checkbox" id="filterPinterest" checked>Pinterest：仅收集 Pin 图片，排除广告、图标和图版封面 / Pinterest: exclude ads, icons and board covers</label>
+<label><input type="checkbox" id="filterSmallImages" checked>屏蔽小图片（默认开启） / Filter small images (default on)</label>
+<label>图片最小短边（像素） / Minimum image short edge (pixels)<input id="imageMinSize" type="number" min="16" max="2000" step="1" value="120"></label>
+<p class="muted">原图和网页显示尺寸均需达到门槛；同时应用于提示词按钮和批量采集，手动上传不受影响。 / Both source and displayed dimensions must meet the threshold. Applies to image buttons and batch collection; manual uploads are unaffected.</p>
+</div></div>
+<div data-settings-pane="sources"><h3>API 来源与路由 / Sources & Routing</h3>
+      <label>编辑来源 / Edit source<select id="sourceSelect"></select></label>
+      <button id="addSource" type="button">新增来源 / Add</button><button id="deleteSource" type="button" class="danger">删除来源 / Delete</button><button id="activateSource" type="button">设为当前来源 / Make active</button>
+      <label>来源名称 / Name<input id="sourceName"></label>
+      <label>协议 / Protocol<select id="protocol"><option value="chat">OpenAI Chat Completions</option><option value="responses">OpenAI Responses</option><option value="anthropic">Anthropic Messages</option><option value="gemini">Google Gemini</option><option value="ollama">Ollama（本机模型，无需密钥） / Ollama (local model, no key)</option></select></label>
+      <label>接口地址 / Base URL<input id="baseUrl" type="url" placeholder="https://example.com/v1"></label>
+      <label>模型 / Model<input id="model" placeholder="gpt-4o-mini"></label>
+      <label>密钥 / API Key<input id="apiKey" type="password" autocomplete="off" placeholder="sk-..."></label>
+      <button id="fetchModels" type="button">读取模型列表 / Fetch models</button>
+      <label class="checkbox-setting"><input id="onlyVision" type="checkbox" checked>仅显示视觉候选 / Vision candidates only</label>
+      <label>模型列表 / Models<select id="modelList"></select></label>
+      <button id="testVision" type="button">测试所选模型视觉能力（一次付费请求） / Test selected vision model (one billed request)</button>
+      <label class="checkbox-setting"><input id="sourceEnabled" type="checkbox" checked>启用此来源 / Enable source</label>
+      <label>路由优先级（数字小优先） / Priority<input id="priority" type="number" min="1" max="9999" value="100"></label><label>单独超时（秒，0 = 使用通用设置） / Own timeout (s, 0 = general setting)<input id="sourceTimeout" type="number" min="0" max="600" step="5" placeholder="0"></label>
+      <label>路由模式 / Routing<select id="routeMode"><option value="single">仅当前来源 / Current only</option><option value="fallback">当前来源失败后切换备用 / Failover</option><option value="priority">按优先级尝试 / Priority + failover</option></select></label>
+      <p id="sourceStatus" role="status" class="hint"></p>
+      <p class="hint">备用路由仅在网络错误、超时、404、429、5xx 时切换，图片会发往下一个启用的来源。401/403、参数错误不会切换。每个来源指定一个模型；优先级模式从数字最小的来源开始。 / Failover uses the next enabled source on network errors, timeouts, 404, 429 or 5xx. Authentication and parameter errors stop the request. Each source has one selected model; priority mode starts from the lowest number.</p>
+      <label class="checkbox-setting"><input id="defaultHistoryOpen" type="checkbox" checked>打开反推窗口时展开历史列表 / Show history by default</label>
+      <label>图片提示词按钮 / Image prompt buttons<select id="imageButtonMode"><option value="all" title="始终显示当前可见图片的按钮 / Always show buttons on visible images">默认 / Default</option><option value="hover" title="鼠标移到图片上时显示 / Show when the pointer is over an image">悬停显示 / On hover</option></select></label>
+      <fieldset><legend>并行与请求控制 / Request control</legend>
+        <label>最大并发任务 / Concurrent tasks<input id="concurrency" type="number" min="1" value="2"></label>
+        <label>请求频率（次/分钟）/ Requests per minute<input id="requestsPerMinute" type="number" min="1" max="600" value="30"></label>
+        <label>单次请求超时（秒）/ Timeout seconds<input id="timeoutSeconds" type="number" min="1" max="600" value="90"></label>
+        <label class="checkbox-setting"><input id="autoRetryTimeout" type="checkbox" checked>超时自动重试 / Retry timeouts automatically</label>
+        <label>最大自动重试次数（不含首次）/ Max retries<input id="maxRetries" type="number" min="0" max="10" value="2"></label>
+        <label>每次请求合并的图片数（1 表示不合并）/ Images per merged request (1 = off)<input id="batchSize" type="number" min="1" max="4" value="4"></label>
+        <p class="hint">同时排队的反推任务最多 4 张合成一次请求，指令只发一次；某张结果缺失或格式不对时单独重发这一张。仅对个人 API 和本地模型生效。 / Up to 4 queued analyses share one request, so the instructions are sent once; an image whose result is missing or malformed is re-sent on its own. Applies to personal APIs and local models.</p>
+        <button id="saveRequestControl" type="button">保存请求控制 / Save request control</button><button id="cancelRequestControl" type="button" class="secondary">取消更改 / Discard</button><span id="requestSaveStatus" role="status" class="hint"></span>
+        <p class="hint">并发数控制当前悬浮窗内的任务；请求按频率均匀发送，排队时间不算超时。超时重试使用同一来源，次数达到上限后停止。路由的其他失败切换仍按来源配置执行。 / Concurrency applies to tasks in the current floating window. Requests are spread evenly by rate; queue time does not count toward the timeout. Timeout retries use the same source and stop at the limit. Other failures follow the source routing.</p>
+      </fieldset>
+      <button id="saveSettings">保存来源 / Save source</button><button id="cancelSource" type="button" class="secondary">取消更改 / Discard</button>
+      <span id="settingsState" class="hint">尚未配置 / Not configured</span>
+      <p class="hint">OpenAI、Anthropic 通常填写带 /v1 的基础地址；Gemini 原生填写 https://generativelanguage.googleapis.com/v1beta。中转站按其文档填写。密钥只保存在本浏览器。 / Use the provider base URL, usually ending in /v1 for OpenAI or Anthropic. Native Gemini uses https://generativelanguage.googleapis.com/v1beta. For relays, follow their docs. API keys stay in this browser.</p>
+    </div><div data-settings-pane="collection" hidden></div><div data-settings-pane="cli" hidden></div></section>
+    <section id="batchPane"><h2>批量与导出 / Batch & Export</h2><label>网页图片范围 / Page image scope<select id="scanScope"><option value="visible">当前可见 / Visible</option><option value="loaded">已加载全页面 / Loaded page</option><option value="scroll">自动滚动采集（等待加载，最多 20 屏） / Auto-scroll with loading wait (up to 20 screens)</option><option value="note">当前笔记全部图片（小红书） / All images of the open note (Xiaohongshu)</option></select></label><div class="scan-actions"><button id="scanPage">扫描网页图片 / Scan page images</button><label class="scan-toggle"><input id="scanAccumulate" type="checkbox" checked>累计 / Accumulate</label><label class="scan-toggle"><input id="skipDuplicateImages" type="checkbox" checked>跳过重复 / Skip duplicates</label></div><div class="scan-secondary"><button id="stopScan" class="secondary" hidden>停止采集 / Stop scan</button><button id="clearScan" class="secondary">清空采集缓存 / Clear scan cache</button></div><div id="batchImages"></div><button id="runBatch" disabled>提交选中图片 / Analyze selected images</button><button id="exportLocal">导出记录 / Export records</button><button id="selectHistory">全选历史 / Select all history</button><p id="batchStatus" class="hint"></p></section>
+    <section>
+      <label class="upload-control">选择图片 / Choose image<input id="file" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>
+      <div id="dropzone">或将图片拖到这里 / Drop image here</div>
+      <img id="preview" alt="图片预览" hidden>
+      <label class="focus-control">提示词重点 / Focus（可选）<input id="focus" placeholder="例如：构图、光线、画风"></label>
+      <button id="analyze" disabled>生成提示词 / Generate</button>
+      <p id="taskTime" class="task-time" aria-live="off"></p><p id="jobCounts" class="hint" role="status"></p><p id="status" role="status"></p>
+    </section>
+    <section id="result" hidden>
+      <div id="resultThumbnail"><img id="resultImage" alt="Analyzed image / 识别图片"></div><h2>分析结果 / Result</h2>
+      <div class="language-tabs"><button id="tabZh">中文 / Chinese</button><button id="tabEn">英文 / English</button></div>
+      <div id="zhGroup"><label>中文提示词 / Chinese prompt<textarea id="zh" rows="8"></textarea></label><button id="copyZh">复制中文 / Copy Chinese</button></div>
+      <div id="enGroup"><label>英文提示词 / English prompt<textarea id="en" rows="8"></textarea></label><button id="copyEn">复制英文 / Copy English</button></div>
+      <button id="copyCurrent">复制 / Copy</button><div id="dynamicPrompt" hidden><div id="resultActions"><button id="copyVersion">复制 / Copy</button><div id="promptVersions" class="language-tabs"></div></div><textarea id="promptVersionText" rows="10" readonly></textarea><span id="copyFeedback" class="copy-feedback" role="status" aria-live="polite"></span></div>
+    </section>
+    <section id="historySection"><h2>历史 / History</h2><p id="historyStatus" role="status" class="hint"></p><div id="history"></div></section>
+  </main>
+  <script src="build.js"></script><script src="companion.js"></script><script src="image-filter.js"></script><script src="task-timing.js"></script><script src="copy-ui.js"></script><script src="control.js"></script><script src="api.js"></script><script src="sources.js"></script><script src="locale-extra.js"></script><script src="locale.js"></script><script src="settings-ui.js"></script><script src="pill-select.js"></script><script src="credits.js"></script><script src="credits-panel.js"></script><script src="cloud.js"></script><script src="account-ui.js"></script><script src="skills-ui.js"></script><script src="community-share.js"></script>
+<script src="liquid-glass.js"></script><script src="layout.js"></script><script src="local-bridge.js"></script><script src="history-tools.js"></script><script src="design.js"></script><script src="shortcuts.js"></script><script src="imagegen.js"></script><script src="profiles.js"></script><script src="profiles-ui.js"></script><script src="imagegen-ui.js"></script><script src="record-kinds.js"></script><script src="app.js"></script><script src="library-upload.js"></script><script src="studio-ui.js"></script><script src="plugins-ui.js"></script><script src="chatgpt-library.js"></script><script src="batch.js"></script>
+</body>
+</html>

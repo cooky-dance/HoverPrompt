@@ -1,0 +1,17 @@
+{
+  "extName": {
+    "message": "HoverPrompt – 图片反推提示词",
+    "description": "商店和浏览器里显示的名称"
+  },
+  "extDescription": {
+    "message": "网页上看到好图，一键反推成详细的 AI 提示词（中英双语），还能生图，所有提示词和图片自动存进资料库。",
+    "description": "商店简短描述（132 字符以内）"
+  },
+  "actionTitle": {
+    "message": "打开 HoverPrompt"
+  },
+  "menuAnalyze": {
+    "message": "生成中英文提示词",
+    "description": "Right-click menu item on images"
+  }
+}

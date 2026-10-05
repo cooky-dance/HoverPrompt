@@ -1,0 +1,119 @@
+{
+  "manifest_version": 3,
+  "name": "__MSG_extName__",
+  "version": "3.10.4",
+  "description": "__MSG_extDescription__",
+  "permissions": [
+    "storage",
+    "contextMenus",
+    "clipboardWrite",
+    "activeTab",
+    "scripting",
+    "tabs",
+    "nativeMessaging",
+    "alarms",
+    "unlimitedStorage"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "__MSG_actionTitle__",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    }
+  },
+  "options_page": "popup.html",
+  "content_scripts": [
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "image-filter.js",
+        "page-images.js",
+        "image-buttons.js",
+        "liquid-glass.js",
+        "shortcuts.js",
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*"
+      ],
+      "js": [
+        "chatgpt-main.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*"
+      ],
+      "js": [
+        "chatgpt-api.js",
+        "chatgpt-plugin.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "companion.js",
+        "build.js",
+        "popup.html",
+        "style.css",
+        "app.js",
+        "api.js",
+        "sources.js",
+        "control.js",
+        "settings-ui.js",
+        "cloud.js",
+        "batch.js",
+        "zip.js",
+        "image-filter.js",
+        "task-timing.js",
+        "copy-ui.js",
+        "layout.js",
+        "locale.js",
+        "local-bridge.js",
+        "history-tools.js",
+        "design.js",
+        "design.css",
+        "icons/*",
+        "liquid-glass.js",
+        "imagegen.js",
+        "imagegen-ui.js",
+        "timer-worker.js",
+        "profiles.js",
+        "profiles-ui.js",
+        "shortcuts.js",
+        "locale-extra.js",
+        "avatars/*"
+      ],
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ]
+    }
+  ],
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "minimum_chrome_version": "111",
+  "default_locale": "en"
+}
