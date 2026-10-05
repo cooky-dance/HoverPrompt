@@ -3,9 +3,9 @@
 <h1 align="center">HoverPrompt</h1>
 
 <p align="center">
-  <b>Image to prompt, right where you find the image.</b><br>
-  A Chrome / Edge extension that turns any picture on the web into a detailed AI prompt,<br>
-  generates new images from it, and keeps every prompt in a searchable library.
+  <b>The all-in-one AI image prompt extension.</b><br>
+  Reverse any image into a prompt · generate with your own API, ChatGPT or cloud credits ·<br>
+  custom skills · a searchable library · a prompt community — in one Chrome / Edge extension.
 </p>
 
 <p align="center">
@@ -18,24 +18,59 @@
 
 ---
 
-## Features
+## Everything in one extension
 
-- **One-click reverse prompts** — hover any image on any website and press **Prompt**. You get a detailed prompt in English and Chinese (and more languages if you like), ready for Midjourney, Stable Diffusion, Flux, ChatGPT and other image models.
-- **Collect a whole page** — pick the reference images on a page (ads, icons and duplicates are skipped), or reverse every image of a Xiaohongshu note in one go.
-- **Skills** — add writing rules to the reverse prompt (film look, product shots on white, Hanfu details…); a skill package can pick its sub-skill per image.
-- **Generate images** — text-to-image and image-to-image with **your own API**: OpenAI-compatible `/v1/images`, Google Gemini / Imagen, Volcengine Ark Seedream and ModelScope. Every result keeps the prompt it came from. Batch image-to-image with per-key concurrency and daily limits.
-- **ChatGPT Studio** — generate images in your own ChatGPT web session from the extension's studio page: several batches at once, the results saved back into your library.
-- **Library** — every reverse prompt and generated image in one searchable place, with success rates and timings; export images and prompts as a ZIP.
-- **Local CLI and agents** — read the library, scan pages and run batch pipelines from the command line, or hand ready-made instructions to an AI agent (see [docs/CLI-AGENT.md](docs/CLI-AGENT.md)).
-- **Optional cloud account** — sign in to [hoverprompt.com](https://hoverprompt.com) for cloud reverse prompts and generation with credits, sync across devices and the community. Everything above also works **without an account** in local mode.
-- Seven interface languages; light, dark and glass themes.
+| | What you get |
+|---|---|
+| 🔍 **Reverse prompts** | Hover any image on any site → a detailed prompt in English, Chinese and more languages, for Midjourney, Stable Diffusion, Flux, ChatGPT… |
+| 🎨 **Three ways to generate** | Your own API (OpenAI-compatible, Gemini / Imagen, Seedream, ModelScope), **ChatGPT Studio** in your own ChatGPT session, or **cloud credits** with no key at all |
+| 🤖 **ChatGPT Studio** | Batch image generation through the ChatGPT web page: several conversations at once, references, ratios, results saved automatically |
+| 🧩 **Custom skills** | Your own writing rules for every reverse prompt: upload a `SKILL.md` package, import from GitHub, sub-skills picked per image |
+| ☁️ **Cloud credits & sync** | Sign in for cloud reverse prompts and image generation, credits at a glance, library sync across devices, a free 7-day Plus trial |
+| 💬 **Community** | Share prompts and AI art, follow creators, generate from any shared prompt in one click |
+| 📚 **Library** | Every prompt and image, searchable in every language, with success rates and timings; export as a ZIP |
+| 🗂️ **Page collection & batch** | Collect a whole page of references (ads, icons and duplicates skipped), reverse a whole Xiaohongshu note, batch image-to-image |
+| ⌨️ **CLI & agents** | Read the library, scan pages and run pipelines from the command line or an AI agent |
+| 🔒 **Local first** | Works without an account; your API keys never leave your browser |
 
-## Screenshots
+## Highlights
+
+### One click on any image
+
+Hover a picture, press **Prompt**, and get a ready-to-use prompt where you found it — in two languages, copied in one click.
+
+![Reverse a prompt from any image](docs/screenshots/en/1-reverse.png)
+
+### ChatGPT Studio
+
+Generate images with **your own ChatGPT account** right from the extension. Write a prompt (or paste references), choose the ratio and how many images, and HoverPrompt runs several ChatGPT conversations in parallel, fetches every image and saves it to your library with its prompt. Rerun, reuse the prompt or post the result to the community in one click.
+
+![ChatGPT Studio](docs/screenshots/en/5-chatgpt-studio.png)
+
+### Custom skills
+
+A skill is a set of writing rules added to the reverse prompt — film stock and grain, product shots on white, Hanfu garment details, a design philosophy… Upload your own `SKILL.md` package (with sub-skills and their "use when" conditions), import one from GitHub, or pick a featured one. With **Auto**, the right sub-skill is chosen for each image.
+
+![Custom skills](docs/screenshots/en/6-skills.png)
+
+### Cloud credits
+
+No API key? Sign in to [hoverprompt.com](https://hoverprompt.com) and use **cloud credits** for reverse prompts and image generation with the [named models](https://hoverprompt.com/models) (Qwen-Image, FLUX, Z-Image, SDXL…). The credits window shows where your credits come from, the last 14 days of use, and packs that never expire. New accounts can claim a **free 7-day Plus trial** — no card needed.
+
+![Cloud credits](docs/screenshots/en/7-cloud-credits.png)
+
+### Community
+
+Post your prompts and images to the [HoverPrompt community](https://hoverprompt.com/community), browse the showcase, like, favourite and follow — and press **Generate with this prompt** to generate from any shared prompt.
+
+![Community](docs/screenshots/en/8-community.png)
+
+### And more
 
 | | |
 |---|---|
-| ![Reverse a prompt from any image](docs/screenshots/en/1-reverse.png) | ![Prompts in several languages](docs/screenshots/en/2-bilingual.png) |
-| ![Generate new images](docs/screenshots/en/3-generate.png) | ![Your prompt library](docs/screenshots/en/4-library.png) |
+| ![Prompts in several languages](docs/screenshots/en/2-bilingual.png) | ![Generate new images with your own API](docs/screenshots/en/3-generate.png) |
+| ![Your prompt library](docs/screenshots/en/4-library.png) | |
 
 ## Install from source
 
@@ -44,13 +79,15 @@
 3. Click **Load unpacked** and choose the [`extension`](extension) folder.
 4. Pin HoverPrompt, open any web page and hover an image.
 
-Requires Chrome or Edge 111 or later. No build step: the extension is plain JavaScript.
+Requires Chrome or Edge 111 or later. No build step: the extension is plain JavaScript (Manifest V3).
+
+**ChatGPT Studio:** turn it on in **Settings → Plugins**, then open **Companion Studio** from the sidebar. The first time, sign in to ChatGPT in the window it opens.
 
 ## Sign in (optional)
 
 Open the extension settings → **Account & sync** → **Sign in**. A page on hoverprompt.com opens; approve the device there (email code or GitHub). The extension then receives an access token for your account only — no password is stored in the extension. Sign out from the same page at any time.
 
-With an account you get cloud reverse prompts and image generation with credits, sync of your library across devices, sharing to the community, and a [free 7-day Plus trial](https://hoverprompt.com/pricing).
+With an account: cloud reverse prompts and generation with credits, the skill market, library sync across devices, posting to the community, and the free 7-day Plus trial. See [pricing](https://hoverprompt.com/pricing).
 
 ## Your own API keys
 
@@ -81,8 +118,11 @@ extension/            the browser extension (Manifest V3), load this folder unpa
   content.js          on-page buttons and the floating panel
   app.js, api.js      reverse prompts with local / your own / cloud models
   imagegen*.js        image generation with your own APIs
-  chatgpt-*.js        ChatGPT Studio (works in your own ChatGPT session)
+  chatgpt-*.js        ChatGPT Studio (runs in your own ChatGPT session)
+  skills-ui.js        skill market and your own skills
   cloud.js            optional HoverPrompt account: sign-in, sync, credits
+  credits-panel.js    the cloud credits window
+  community-share.js  posting to the community
   cli/                local CLI and Native Messaging bridge
   _locales/           store name and description (English, Simplified Chinese)
 docs/                 screenshots and the CLI / agent guide
