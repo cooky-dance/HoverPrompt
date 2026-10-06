@@ -16,7 +16,20 @@ const Cloud=(()=>{
   async function profile(data){const result=await api('/profile',data);if(account)account.user={...account.user,...result.user};announce();return result.user;}
   // Cloud image generation (the website workbench's /api/generate, paid with cloud credits): one image, the default model,
   // reference images as data URLs. Waits for the result and returns the images as data URLs, like a local source.
+  // references go to the model as they are: the cloud models take at most 2048×2048 (ModelScope answers 400 "输入尺寸超出
+  // 限制 2048×2048" to a 2132×1080 page image), so each is redrawn as a JPEG of at most 2048 px on the long side first
+  async function fitRef(dataUrl){
+   try{if(typeof createImageBitmap!=='function'||typeof OffscreenCanvas!=='function')return dataUrl;
+    const bitmap=await createImageBitmap(await (await fetch(dataUrl)).blob()),scale=Math.min(1,2048/Math.max(bitmap.width,bitmap.height));
+    if(scale===1&&dataUrl.length<5*1024*1024){bitmap.close?.();return dataUrl;}
+    const canvas=new OffscreenCanvas(Math.max(1,Math.round(bitmap.width*scale)),Math.max(1,Math.round(bitmap.height*scale))),g=canvas.getContext('2d');
+    g.fillStyle='#fff';g.fillRect(0,0,canvas.width,canvas.height);g.drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close?.();
+    const blob=await canvas.convertToBlob({type:'image/jpeg',quality:.9});
+    return await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(reader.error);reader.readAsDataURL(blob);});
+   }catch{return dataUrl;}
+  }
   async function generate({prompt,aspect,refs=[],signal,model}={}){
+   refs=await Promise.all(refs.slice(0,10).map(fitRef));
    const started=Date.now(),toData=blob=>new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(reader.error);reader.readAsDataURL(blob);});
    const ratios=['1:1','16:9','9:16','4:3','3:4','3:2','2:3','21:9','9:21'];
    let r=await api('/generate',{prompt:String(prompt||'').slice(0,4000),ratio:ratios.includes(aspect)?aspect:'1:1',count:1,refs:refs.slice(0,10),...(model?{model}:{})}).catch(error=>{if(error.status===502)throw new Error('云端生图服务繁忙，请稍后再试 / Cloud generation is busy');throw error;});
@@ -79,15 +92,18 @@ const Cloud=(()=>{
    catch{return dataUrl;}
   }
   async function download(path){const response=await fetch(base()+path,{headers:{Authorization:'Bearer '+config.token}});return response.ok?blobToDataUrl(await response.blob()):'';}
+  // run work(item) for every item, at most n at a time
+  async function pool(items,n,work){let next=0;await Promise.all(Array.from({length:Math.min(n,items.length)},async()=>{while(next<items.length)await work(items[next++]);}));}
   async function sync(){
     if(syncing)throw new Error('同步正在进行 / Sync is running');if(!config.token)throw new Error('请先登录 / Sign in first');syncing=true;
     try{
-      await status();const userId=account.user.id,key='cloudSync:'+userId,saved=await chrome.storage.local.get([key]),state={cursor:0,revisions:{},fingerprints:{},deleted:[],genUploaded:{},...saved[key]};let conflicts=0,uploaded=0,pulled=0;
+      await status();const userId=account.user.id,key='cloudSync:'+userId,saved=await chrome.storage.local.get([key]),state={cursor:0,revisions:{},fingerprints:{},deleted:[],genUploaded:{},...saved[key]};let conflicts=0,uploaded=0,pulled=0,removed=0;
       const withGenerations=config.syncGenerations===true,originals=config.syncOriginals!==false;
       const limit=account.quota?.sync?.limit??Infinity,tasks=(await allTasks()).filter(task=>!['queued','running','retrying'].includes(task.status)).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).slice(0,limit),conflictIds=new Set();
-      for(const task of tasks){
+      // up to 3 records go up at a time (each request is independent; the state is written once at the end)
+      const upload=async task=>{
         // the shared sync fields (see the plugin docs, "Sync fields"); local-only fields such as file paths stay on this device
-        const record={id:task.id,kind:globalThis.RecordKinds?RecordKinds.kindOf(task):task.kind,source:task.source,plugin:task.plugin,params:task.params||task.studio,createdAt:task.createdAt,zh:task.zh,en:task.en,prompts:task.prompts,focus:task.focus,status:task.status,error:task.error,sourceUrl:task.sourceUrl,timing:task.timing};
+        const record={id:task.id,kind:globalThis.RecordKinds?RecordKinds.kindOf(task):task.kind,source:task.source,plugin:task.plugin,params:task.params||task.studio,createdAt:task.createdAt,zh:task.zh,en:task.en,prompts:task.prompts,focus:task.focus,status:task.status,error:task.error,sourceUrl:task.sourceUrl,...(task.hostedRef?{hostedRef:task.hostedRef}:{}),timing:task.timing};
         const finished=(task.generations||[]).filter(g=>['done','failed'].includes(g.status)),sent=new Set(state.genUploaded[task.id]||[]),genImages={};
         const original=originals&&task.originalImage||null,sendImage=task.image&&(state.fingerprints[task.id]===undefined||!state.imageSent?.[task.id]||original&&!state.originalSent?.[task.id]),imagePayload=sendImage?original||task.image:null;let budget=20*1024*1024-(imagePayload?.length||0);
         if(withGenerations){
@@ -95,30 +111,33 @@ const Cloud=(()=>{
          for(const g of finished)if(g.image&&!sent.has(g.id)){let image=originals&&g.image.length<=15*1024*1024?g.image:await compactImage(g.image);if(image.length>budget&&Object.keys(genImages).length)break;if(image.length>budget)image=await compactImage(g.image);if(image.length>budget)break;budget-=image.length;genImages[g.id]=image;}
         }
         const fingerprint=JSON.stringify(record)+(task.image?task.image.length+':'+task.image.slice(-32):'')+(withGenerations?'|'+finished.filter(g=>g.image).map(g=>g.id).filter(id=>!sent.has(id)&&!genImages[id]).join(','):'');
-        if(state.fingerprints[task.id]===fingerprint&&!Object.keys(genImages).length)continue;
+        if(state.fingerprints[task.id]===fingerprint&&!Object.keys(genImages).length)return;
         try{const result=await api('/records',{record,baseRevision:state.revisions[task.id]||0,...(imagePayload?{image:imagePayload}:{}),...(Object.keys(genImages).length?{genImages}:{})});
          state.revisions[task.id]=result.revision;state.fingerprints[task.id]=fingerprint;(state.imageSent||={})[task.id]=true;if(original&&imagePayload===original)(state.originalSent||={})[task.id]=true;state.genUploaded[task.id]=[...sent,...Object.keys(genImages)];uploaded++;}
-        catch(e){if(e.status===409){conflicts++;conflictIds.add(task.id);continue;}throw e;}
-      }
+        catch(e){if(e.status===409){conflicts++;conflictIds.add(task.id);return;}throw e;}
+      };
+      await pool(tasks,3,upload);
       for(const deletion of state.deleted||[]){try{const result=await api('/records',{record:{id:deletion.id},deleted:true,baseRevision:deletion.revision});state.revisions[deletion.id]=result.revision;state.deleted=state.deleted.filter(x=>x.id!==deletion.id);}catch(e){if(e.status===409){conflicts++;conflictIds.add(deletion.id);continue;}throw e;}}
-      let more=true;while(more){const page=await api('/records?after='+state.cursor);for(const record of page.records){
-        if(conflictIds.has(record.id))continue;
+      // a page of changes: only each record's latest change, 4 records at a time (their images download in parallel)
+      let more=true;while(more){const page=await api('/records?after='+state.cursor),latest=new Map();for(const record of page.records)latest.set(record.id,record);
+       await pool([...latest.values()],4,async record=>{
+        if(conflictIds.has(record.id))return;
         const existing=await getTask(record.id);
-        if(state.revisions[record.id]&&record.revision<=state.revisions[record.id])continue;
+        if(state.revisions[record.id]&&record.revision<=state.revisions[record.id])return;
         // Evicted = the cloud dropped its copy (outside the latest-N limit); the local record stays.
-        if(record.deleted&&record.evicted){delete state.fingerprints[record.id];delete state.revisions[record.id];continue;}
-        if(record.deleted){await dbCall('readwrite',store=>store.delete(record.id));delete state.fingerprints[record.id];}
+        if(record.deleted&&record.evicted){delete state.fingerprints[record.id];delete state.revisions[record.id];return;}
+        if(record.deleted){await dbCall('readwrite',store=>store.delete(record.id));removed++;delete state.fingerprints[record.id];}
         else {
          const image=record.hasImage&&!existing?.image?await download('/api/images/'+record.id):existing?.image||'';
          // Generated images: keep local ones, download the ones only the cloud has.
          const local=new Map((existing?.generations||[]).map(g=>[g.id,g]));const generations=[...local.values()];
-         for(const g of record.generations||[]){if(local.has(g.id)){if(g.model)local.get(g.id).model=g.model;continue;}const {imageHash,...meta}=g;const genImage=imageHash?await download('/api/images/'+record.id+'?gen='+encodeURIComponent(g.id)):'';generations.push({...meta,...(genImage?{image:genImage}:{})});}
+         await Promise.all((record.generations||[]).map(async g=>{if(local.has(g.id)){if(g.model)local.get(g.id).model=g.model;return;}const {imageHash,...meta}=g;const genImage=imageHash?await download('/api/images/'+record.id+'?gen='+encodeURIComponent(g.id)):'';generations.push({...meta,...(genImage?{image:genImage}:{})});}));
          const {revision,deleted,evicted,hasImage,updatedAt,generations:_,...fields}=record;
          await saveTask({...existing,...fields,image,generations:generations.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0))});pulled++;if(record.hasImage)(state.imageSent||={})[record.id]=true;
         }
         state.revisions[record.id]=record.revision;
-      }state.cursor=page.cursor;more=page.hasMore;await chrome.storage.local.set({[key]:state});}
-      await chrome.storage.local.set({[key]:state});await renderHistory();await status();
+       });state.cursor=page.cursor;more=page.hasMore;await chrome.storage.local.set({[key]:state});}
+      await chrome.storage.local.set({[key]:state});if(pulled||removed)await renderHistory();await status();
       $('cloudStatus').textContent='同步完成 / Synced'+(Number.isFinite(limit)?' · 云端保留最近 '+limit+' 条 / Cloud keeps the latest '+limit:'')+(conflicts?' · 冲突保留本地，未覆盖 / Local conflicts kept: '+conflicts:'');
       return {uploaded,pulled,conflicts};
     }finally{syncing=false;}
@@ -138,5 +157,9 @@ const Cloud=(()=>{
   bind('cloudAccount',async()=>{await save();await chrome.tabs.create({url:base()+'/account?view=account'});});
   bind('claimGift',async()=>{const s=await chrome.storage.local.get(['installId']);const installId=s.installId||crypto.randomUUID();if(!s.installId)await chrome.storage.local.set({installId});await api('/install/claim',{installId});await status();});
   bind('cloudLogout',async()=>{config.token='';account=null;await chrome.storage.local.set({cloudConfig:config});await chrome.storage.local.remove?.('cloudCredits');announce();$('cloudStatus').textContent='已退出此设备 / Signed out locally; revoke token in account page';});
+  // back from a payment (or any) tab: the account is read again, at most every 15 s, so Plus, credits and the sync limit
+  // show at once in this window
+  {let last=0;const again=()=>{if(document.visibilityState!=='visible'||!config.token||Date.now()-last<15000)return;last=Date.now();status().catch(()=>{});};
+   if(typeof document!=='undefined'&&typeof addEventListener==='function'){addEventListener('focus',again);document.addEventListener('visibilitychange',again);}}
   return {init,analyze,mode,deleted,sync,status,setMode,profile,buyPack,claimTrial,generate,skills,account:()=>account,signedIn:()=>!!(config.token&&account),usage,pricing,syncGenerations:()=>config.syncGenerations===true,setSyncGenerations,syncOriginals:()=>config.syncOriginals!==false,setSyncOriginals,login,cancelLogin,reopenLogin,loginState,base:()=>{try{return base();}catch{return '';}}};
 })();

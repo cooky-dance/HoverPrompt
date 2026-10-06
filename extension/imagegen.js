@@ -31,7 +31,12 @@ globalThis.ImageGen=(()=>{
   else list=source.protocol==='modelscope'?await Promise.all(images.map(inlineJpeg)):images;
   return {mode:mode==='url'?'url':'inline',field,value:many?list:list[0],image:list[0],images:list,...(mode==='url'?{url:list[0]}:{})};
  }
- async function reference(source,{image,images,imageUrl,originalUrl}){
+ // ModelScope refuses references over 2048×2048 ("输入尺寸超出限制 2048×2048，当前输入尺寸：(2132,1080)"). Our own
+ // hosted copies are already ≤ 2048 (shrink() before the upload); any other address is fetched through wsrv.nl, which
+ // scales it to fit 2048×2048 (never enlarges) and serves a JPEG.
+ const fitted=url=>!/^https?:\/\//.test(url||'')||HOSTED.test(url)?url:'https://wsrv.nl/?url='+encodeURIComponent(url)+'&w='+MODELSCOPE.maxSide+'&h='+MODELSCOPE.maxSide+'&fit=inside&we&output=jpg&maxage=1d';
+ const forSource=(source,url)=>source.protocol==='modelscope'?fitted(url):url;
+ async function reference(source,{image,images,imageUrl,originalUrl,hosted,onHosted,force}){
   if(Array.isArray(images)&&images.length>1)return references(source,images.slice(0,10));
   if(!image&&!imageUrl&&!originalUrl)return null;
   const preset=REFERENCE[source.protocol]||REFERENCE.openai,mode=source.refMode&&source.refMode!=='auto'?source.refMode:preset.mode;
@@ -39,13 +44,18 @@ globalThis.ImageGen=(()=>{
   if(mode==='url'){
    const web=[source.protocol==='modelscope'?imageUrl:originalUrl,imageUrl,originalUrl].find(url=>/^https?:\/\//.test(url||''));
    const host=await imgbbSettings();
-   let url=web;if(host.key&&image&&(host.when==='always'||!web))url=await hostImage(image,host);
+   // the record's hosted copy (kept on the record and synced), while it has not expired: no second upload
+   if(hosted&&/^https:\/\//.test(hosted.url||'')&&hosted.expiresAt>Date.now()+600000&&(hosted.delivery||'wsrv')===host.delivery)return {mode,field,value:wrap(hosted.url),url:hosted.url};
+   // ModelScope's servers time out fetching most overseas page addresses (Pinterest and others: "context deadline
+   // exceeded"), so with ImgBB set up it always gets a hosted copy; other providers use the page address unless "always"
+   const hostIt=host.key&&image&&(host.when==='always'||!web||force||(source.protocol==='modelscope'&&!HOSTED.test(web)));
+   let url=forSource(source,web);if(hostIt){const info=await hostImageInfo(image,host);url=info.url;await onHosted?.(info);}
    if(!url)throw new Error('此来源用图片 URL 传参考图，但这张图没有网页地址（本地上传的图片）：请在下方配置 ImgBB 图床，或改用“上传图片数据”');
    return {mode,field,value:wrap(url),url};
   }
   if(!image){
    // no image data (e.g. only an address is known): fall back to the address
-   const web=[imageUrl,originalUrl].find(url=>/^https?:\/\//.test(url||''));if(web)return {mode:'url',field,value:wrap(web),url:web};
+   const web=forSource(source,[imageUrl,originalUrl].find(url=>/^https?:\/\//.test(url||'')));if(web)return {mode:'url',field,value:wrap(web),url:web};
    throw new Error('缺少参考图数据');
   }
   const data=source.protocol==='modelscope'?await inlineJpeg(image):image;
@@ -54,7 +64,19 @@ globalThis.ImageGen=(()=>{
  // ImgBB (https://api.imgbb.com/): multipart upload of the image file (not base64 text), key in the body (not the URL),
  // default one-day expiry; "wsrv" delivery wraps the direct link with wsrv.nl, which ModelScope can fetch reliably.
  async function imgbbSettings(){const saved=await chrome.storage.local.get(['imgbbKey','imgbbExpiration','imgbbDelivery','imgbbWhen']);return {key:String(saved.imgbbKey||'').trim(),expiration:Math.min(15552000,Math.max(60,parseInt(saved.imgbbExpiration,10)||IMGBB.expiration)),delivery:saved.imgbbDelivery==='direct'?'direct':'wsrv',when:saved.imgbbWhen==='always'?'always':'missing'};}
- const hostedCache=new Map();
+ // Hosted copies by image digest, kept in chrome.storage.local (they outlive the service worker) until they expire;
+ // one upload at a time per image (a second task with the same image waits for the first upload).
+ const hostedCache=new Map(),hostedUploads=new Map(),HOSTED_KEY='imgbbHosted',HOSTED=/^https:\/\/(i\.ibb\.co|wsrv\.nl)\//;
+ async function hostedGet(digest){
+  let hit=hostedCache.get(digest);
+  if(!hit){const saved=(await chrome.storage.local.get([HOSTED_KEY]))[HOSTED_KEY]||{};hit=saved[digest];if(hit)hostedCache.set(digest,hit);}
+  return hit&&hit.expiresAt>Date.now()+600000?hit:null;
+ }
+ async function hostedPut(digest,value){
+  hostedCache.set(digest,value);const saved=(await chrome.storage.local.get([HOSTED_KEY]))[HOSTED_KEY]||{},now=Date.now();
+  const kept=Object.entries({...saved,[digest]:value}).filter(([,v])=>v?.expiresAt>now).sort((a,b)=>b[1].expiresAt-a[1].expiresAt).slice(0,300);
+  await chrome.storage.local.set({[HOSTED_KEY]:Object.fromEntries(kept)});
+ }
  // Inline references for ModelScope: resized to ≤ 2048 px and re-encoded as JPEG so the request stays small.
  async function inlineJpeg(dataUrl){
   try{const blob=await shrink(dataUrlToBlob(dataUrl),{minSide:512,jpeg:true});if(blob.type!=='image/jpeg'&&blob.type!=='image/png'&&blob.type!=='image/webp')return dataUrl;
@@ -73,18 +95,24 @@ globalThis.ImageGen=(()=>{
   g.fillStyle='#fff';g.fillRect(0,0,canvas.width,canvas.height);g.imageSmoothingQuality='high';g.drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close?.();
   return canvas.convertToBlob({type:'image/jpeg',quality:0.9});
  }
- async function hostImage(dataUrl,host){
+ async function hostImage(dataUrl,host){return (await hostImageInfo(dataUrl,host)).url;}
+ // {url, expiresAt, delivery}
+ async function hostImageInfo(dataUrl,host){
   const digest=[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(dataUrl)))].slice(0,12).map(n=>n.toString(16).padStart(2,'0')).join('')+':'+host.delivery;
-  const cached=hostedCache.get(digest);if(cached&&cached.expiresAt>Date.now()+600000)return cached.url;
+  const cached=await hostedGet(digest);if(cached)return cached;
+  if(hostedUploads.has(digest))return hostedUploads.get(digest);
+  const upload=uploadImage(dataUrl,host,digest).finally(()=>hostedUploads.delete(digest));hostedUploads.set(digest,upload);return upload;
+ }
+ async function uploadImage(dataUrl,host,digest){
   const blob=await shrink(dataUrlToBlob(dataUrl)),form=new FormData();
   form.append('key',host.key);form.append('expiration',String(host.expiration));form.append('image',blob,'reference.'+(blob.type==='image/png'?'png':'jpg'));
   let data;try{data=await http('https://api.imgbb.com/1/upload',{method:'POST',body:form},{key:host.key,timeoutMs:60000});}catch(error){const e=new Error('ImgBB 上传失败：'+error.message);e.status=error.status;throw e;}
   const direct=data?.data?.url||data?.data?.image?.url;
   if(data?.success!==true||Number(data?.status)!==200||!/^https:\/\//.test(direct||''))throw new Error('ImgBB 响应未通过校验（success/status/直链）');
   const url=host.delivery==='wsrv'?'https://wsrv.nl/?url='+encodeURIComponent(direct)+'&maxage='+Math.min(365,Math.max(1,Math.ceil(host.expiration/86400)))+'d':direct;
-  hostedCache.set(digest,{url,expiresAt:Date.now()+host.expiration*1000});return url;
+  const info={url,expiresAt:Date.now()+host.expiration*1000,delivery:host.delivery};await hostedPut(digest,info);return info;
  }
- async function testImgbb(key){const canvas=typeof OffscreenCanvas==='function'?new OffscreenCanvas(8,8):null;let dataUrl='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';if(canvas){canvas.getContext('2d').fillRect(0,0,8,8);dataUrl=await blobToDataUrl(await canvas.convertToBlob({type:'image/png'}));}hostedCache.clear();return hostImage(dataUrl,{...(await imgbbSettings()),key,expiration:60});}
+ async function testImgbb(key){const canvas=typeof OffscreenCanvas==='function'?new OffscreenCanvas(8,8):null;let dataUrl='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';if(canvas){canvas.getContext('2d').fillRect(0,0,8,8);dataUrl=await blobToDataUrl(await canvas.convertToBlob({type:'image/png'}));}hostedCache.clear();return (await uploadImage(dataUrl,{...(await imgbbSettings()),key,expiration:60},'test:'+Date.now())).url;}
  // Cross-window limits: Web Locks are shared by every extension page (settings, all floating windows).
  const memoryLocks=new Map();
  async function lock(name,options,callback){
@@ -147,10 +175,10 @@ globalThis.ImageGen=(()=>{
  function dataUrlToBlob(dataUrl){const {mime,data}=dataUrlParts(dataUrl);const bytes=Uint8Array.from(atob(data),c=>c.charCodeAt(0));return new Blob([bytes],{type:mime});}
 
  const providers={
-  async openai(source,{prompt,image,images,imageUrl,originalUrl,signal}){
+  async openai(source,{prompt,image,images,imageUrl,originalUrl,signal,hosted,onHosted}){
    const root=base(source);if(!root)throw new Error('请填写接口地址（通常以 /v1 结尾）');
    const auth={Authorization:'Bearer '+source.apiKey},size=sizeFor(source),quality=source.quality&&source.quality!=='auto'?source.quality:null;
-   let data;const ref=await reference(source,{image,images,imageUrl,originalUrl});
+   let data;const ref=await reference(source,{image,images,imageUrl,originalUrl,hosted,onHosted});
    if(ref?.mode==='url'){
     // URL mode: many compatible gateways take the reference as an image URL field on /images/generations.
     data=await http(root+'/images/generations',{method:'POST',headers:{...auth,'Content-Type':'application/json'},body:JSON.stringify({model:source.model,prompt,size,n:1,...(quality?{quality}:{}),[ref.field]:ref.value})},{signal,key:source.apiKey});
@@ -163,8 +191,8 @@ globalThis.ImageGen=(()=>{
    return (data.data||[]).map(item=>item.b64_json?'data:image/png;base64,'+item.b64_json:item.url).filter(Boolean);
   },
   // ModelScope (async): up to two keys; each key has its own concurrency and submission gap across all windows.
-  async modelscope(source,{prompt,imageUrl,originalUrl,image,images,signal}){
-   const root=base(source),ref=await reference(source,{image,images,imageUrl,originalUrl});
+  async modelscope(source,{prompt,imageUrl,originalUrl,image,images,signal,hosted,onHosted}){
+   const root=base(source),ref=await reference(source,{image,images,imageUrl,originalUrl,hosted,onHosted});
    const body={model:source.model,prompt,size:sizeFor(source),...(ref?{[ref.field]:ref.value}:{})};
    const keys=[source.apiKey,source.apiKey2].map(key=>String(key||'').trim()).filter(Boolean);
    const limit=Math.min(10,Math.max(1,parseInt(source.keyConcurrency,10)||MODELSCOPE.keyConcurrency)),gapMs=Math.max(0,Number(source.submitGapSec??MODELSCOPE.submitGapSec))*1000;
@@ -182,13 +210,16 @@ globalThis.ImageGen=(()=>{
         if(error.status===429&&quotaText.test(error.body||error.message)){await markExhausted(id);error.quota=true;throw error;}
         if(error.status===429&&tries<TIMING.rateTries){await sleep(TIMING.rateBackoffMs*tries);if(signal?.aborted)throw new DOMException('任务已取消','AbortError');continue;}
         if(error.status===401||error.status===403){const e=new Error('魔搭 Token 无效或无权限（HTTP '+error.status+'），请更新密钥');e.status=error.status;throw e;}
+        // ModelScope could not download the reference address (overseas images time out on its side)
+        if(error.status===400&&ref?.url&&/deadline exceeded|Client\.Timeout|awaiting headers/i.test(error.message)){const e=new Error('魔搭下载参考图网址超时（海外图片）：请在下方配置 ImgBB 图床，或把参考图方式改为“上传图片数据” / ModelScope timed out fetching the reference address: set up ImgBB below, or send the image data instead');e.status=400;throw e;}
         throw error;
        }
       }
       if(!task.task_id)throw new Error('魔搭未返回 task_id');
       const started=Date.now();
-      for(;;){
-       await sleep(TIMING.pollMs);if(signal?.aborted)throw new DOMException('任务已取消','AbortError');
+      // ModelScope often finishes in a few seconds: ask after 1.5 s, then a little less often (up to every 4 s)
+      for(let polls=0;;polls++){
+       await sleep(Math.min(TIMING.pollMs,1500+polls*500));if(signal?.aborted)throw new DOMException('任务已取消','AbortError');
        const state=await http(root+'/v1/tasks/'+encodeURIComponent(task.task_id),{headers:{...headers,'X-ModelScope-Task-Type':'image_generation'}},{signal,key,timeoutMs:60000});
        if(state.task_status==='SUCCEED')return state.output_images||[];
        if(state.task_status==='FAILED'){const e=new Error('魔搭任务失败：'+redact(JSON.stringify(state.errors||state.message||''),key));e.status=500;throw e;}
@@ -199,7 +230,7 @@ globalThis.ImageGen=(()=>{
    }
    const e=new Error(lastError?'魔搭所有密钥今日额度已用完 / All ModelScope keys are out of quota today':'魔搭所有密钥今日额度已用完，明天自动恢复 / All ModelScope keys are out of quota today');e.status=429;throw e;
   },
-  async gemini(source,{prompt,image,images,imageUrl,originalUrl,signal}){
+  async gemini(source,{prompt,image,images,imageUrl,originalUrl,signal,hosted,onHosted}){
    const root=base(source),model=String(source.model||'').replace(/^models\//,'');
    const url=root+'/models/'+encodeURIComponent(model)+':'+(/^imagen/i.test(model)?'predict':'generateContent');
    const headers={'Content-Type':'application/json','x-goog-api-key':source.apiKey};
@@ -208,14 +239,14 @@ globalThis.ImageGen=(()=>{
     const data=await http(url,{method:'POST',headers,body:JSON.stringify({instances:[{prompt}],parameters:{sampleCount:1,aspectRatio:source.aspect||DEFAULTS.aspect,...(Number(source.pixels)>=2048?{sampleImageSize:'2K'}:{})}})},{signal,key:source.apiKey});
     return (data.predictions||[]).map(p=>p.bytesBase64Encoded?'data:'+(p.mimeType||'image/png')+';base64,'+p.bytesBase64Encoded:null).filter(Boolean);
    }
-   const ref=await reference(source,{image,images,imageUrl,originalUrl});
+   const ref=await reference(source,{image,images,imageUrl,originalUrl,hosted,onHosted});
    // Gemini takes image data only: in URL mode the page image is downloaded first.
    const parts=[{text:prompt}];if(ref){for(const one of ref.images||[ref.mode==='url'?ref.url:ref.image]){const {mime,data}=dataUrlParts(/^https?:/.test(one)?await toDataUrl(one):one);parts.push({inline_data:{mime_type:mime,data}});}}
    const data=await http(url,{method:'POST',headers,body:JSON.stringify({contents:[{parts}],generationConfig:{responseModalities:['IMAGE'],imageConfig:{aspectRatio:source.aspect||DEFAULTS.aspect}}})},{signal,key:source.apiKey});
    return (data.candidates?.[0]?.content?.parts||[]).map(part=>part.inlineData||part.inline_data).filter(Boolean).map(inline=>'data:'+(inline.mimeType||inline.mime_type||'image/png')+';base64,'+inline.data);
   },
-  async seedream(source,{prompt,image,images,imageUrl,originalUrl,signal}){
-   const root=base(source),ref=await reference(source,{image,images,imageUrl,originalUrl});
+  async seedream(source,{prompt,image,images,imageUrl,originalUrl,signal,hosted,onHosted}){
+   const root=base(source),ref=await reference(source,{image,images,imageUrl,originalUrl,hosted,onHosted});
    const data=await http(root+'/images/generations',{method:'POST',headers:{Authorization:'Bearer '+source.apiKey,'Content-Type':'application/json'},body:JSON.stringify({model:source.model,prompt,size:sizeFor(source),response_format:'b64_json',watermark:false,...(ref?{[ref.field]:ref.value}:{})})},{signal,key:source.apiKey});
    return (data.data||[]).map(item=>item.b64_json?'data:image/jpeg;base64,'+item.b64_json:item.url).filter(Boolean);
   }};

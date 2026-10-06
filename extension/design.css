@@ -498,6 +498,8 @@ body textarea{font-weight:400!important}
 .history-expand[aria-expanded=true]::before{rotate:180deg}
 .history-retry{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 12a9 9 0 1 0 3-6.7L3 8'/%3E%3Cpath d='M3 3v5h5'/%3E%3C/svg%3E")}
 .history-delete{--icon:url('icons/trash-2.svg')}
+/* posting to the community: a share mark (an arrow leaving a box), no text */
+.history-share{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3v12'/%3E%3Cpath d='m7 8 5-5 5 5'/%3E%3Cpath d='M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6'/%3E%3C/svg%3E")}
 #history .item .history-actions{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
 #history .item .history-actions>button{margin:0}
 /* generate buttons: text-to-image violet, image-to-image amber */
@@ -783,6 +785,11 @@ body.embedded header button[data-icon="folder"]{--icon:url("data:image/svg+xml,%
 body.embedded header button[data-icon="batch"]{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m12 2 10 5-10 5L2 7Z'/%3E%3Cpath d='m2 12 10 5 10-5'/%3E%3Cpath d='m2 17 10 5 10-5'/%3E%3C/svg%3E")}
 body.embedded header button[data-icon="capture"]{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 7V5a2 2 0 0 1 2-2h2'/%3E%3Cpath d='M17 3h2a2 2 0 0 1 2 2v2'/%3E%3Cpath d='M21 17v2a2 2 0 0 1-2 2h-2'/%3E%3Cpath d='M7 21H5a2 2 0 0 1-2-2v-2'/%3E%3Cpath d='M12 9v6M9 12h6'/%3E%3C/svg%3E")}
 body.embedded header button[data-icon="settings"]{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E")}
+body.embedded header button[data-icon="sync"]{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 12a9 9 0 0 1-15.5 6.2L3 16'/%3E%3Cpath d='M3 21v-5h5'/%3E%3Cpath d='M3 12a9 9 0 0 1 15.5-6.2L21 8'/%3E%3Cpath d='M21 3v5h-5'/%3E%3C/svg%3E")}
+header button#syncNow[hidden]{display:none!important}
+header button#syncNow.busy::before{animation:sync-spin 1s linear infinite}
+header button#syncNow.done{color:#22c55e!important}header button#syncNow.failed{color:#ef4444!important}
+@keyframes sync-spin{to{rotate:360deg}}@media (prefers-reduced-motion:reduce){header button#syncNow.busy::before{animation:none;opacity:.5}}
 body.embedded header button[data-icon]{font-size:0!important}
 body.embedded header button[data-icon]::before{content:'';width:19px;height:19px;background:currentColor;-webkit-mask:var(--icon) center/contain no-repeat;mask:var(--icon) center/contain no-repeat}
 /* sticky history toolbar: an opaque frosted strip, so cards no longer show through while scrolling */
@@ -1265,3 +1272,12 @@ body:not(.embedded) #settingsSidebar .brand span{padding-inline-start:32px}
 .community-share .share-status:empty{display:none}
 .credits-panel .cp-agree{margin:10px 2px 0;font-size:11.5px;line-height:1.5;color:var(--muted,#8a8f98)}.credits-panel .cp-agree a{color:inherit;text-decoration:underline;text-underline-offset:2px}
 .cp-pro .cp-secondary{border-radius:999px!important;min-height:34px!important;padding:5px 14px!important;font-weight:700!important;background:transparent!important;color:#fff!important;border:1px solid rgba(255,255,255,.55)!important;flex:none}.cp-pro .cp-secondary:hover{background:rgba(255,255,255,.14)!important}.cp-pro .cp-trial{display:block;font-size:12px;opacity:.85;margin-top:2px}
+/* packs in the credits panel: lift, a coloured edge, one light sweep, the icon hops */
+.cp-pack{overflow:hidden;isolation:isolate;transition:transform .22s cubic-bezier(.2,.8,.2,1.2),box-shadow .22s,border-color .22s}
+.cp-pack::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(105deg,transparent 30%,#ffffff45 48%,transparent 66%);transform:translateX(-120%);pointer-events:none}
+.cp-pack:not(:disabled):hover{transform:translateY(-3px) scale(1.02);border-color:#8b5cf6!important;box-shadow:0 12px 26px #8b5cf62e,0 0 0 3px #8b5cf61f}
+.cp-pack.sync:not(:disabled):hover{border-color:#14b8a6!important;box-shadow:0 12px 26px #14b8a62e,0 0 0 3px #14b8a61f}
+.cp-pack:not(:disabled):hover::before{transform:translateX(120%);transition:transform .7s ease}
+.cp-pack:not(:disabled):hover .cp-pack-icon svg{animation:cp-hop .5s cubic-bezier(.3,1.6,.5,1)}
+@keyframes cp-hop{40%{transform:translateY(-4px) rotate(-8deg)}}
+@media (prefers-reduced-motion:reduce){.cp-pack,.cp-pack::before{transition:none!important}.cp-pack:not(:disabled):hover{transform:none}.cp-pack-icon svg{animation:none!important}}

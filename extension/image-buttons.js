@@ -1,6 +1,12 @@
 globalThis.ImagePromptButtons ||= {
+  // Sites without buttons: one domain per line (subdomains included); hoverprompt.com until the user changes the list.
+  DEFAULT_BLOCKED:['hoverprompt.com'],
+  domains(value){const list=Array.isArray(value)?value:String(value??'').split(/[\s,;]+/);
+    return [...new Set(list.map(d=>String(d).trim().toLowerCase().replace(/^[a-z]+:\/\//,'').replace(/[\/?#:].*$/,'').replace(/^\*\.|^www\./,'').replace(/\.$/,'')).filter(d=>/^[a-z0-9.-]+\.[a-z0-9-]+$|^localhost$|^\d+\.\d+\.\d+\.\d+$/.test(d)))].slice(0,200);},
+  siteBlocked(hostname,list){const h=String(hostname||'').toLowerCase().replace(/\.$/,'');return list.some(d=>h===d||h.endsWith('.'+d));},
   create(root, host, onSelect) {
-    const records=new Map();let mode='all',pointer=null,frame=null,activated=false,requireActivation=false,extra={reverse:false,i2i:false};
+    const records=new Map();let mode='all',pointer=null,frame=null,activated=false,requireActivation=false,extra={prompt:true,reverse:false,i2i:false},blocked=false;
+    const anyButton=()=>extra.prompt||extra.reverse||extra.i2i;
     const css=document.createElement('style');
     css.textContent='.image-prompt-group{position:fixed;z-index:1;display:flex;gap:4px;pointer-events:none;max-width:calc(100vw - 16px)}.image-prompt-group[hidden]{display:none!important}.image-prompt-group .image-prompt-button{position:static}.image-prompt-group .image-prompt-button[hidden]{display:none!important}.image-prompt-button{position:fixed;z-index:1;padding:5px 10px;font-size:12px;line-height:18px;white-space:nowrap;cursor:pointer;pointer-events:auto;max-width:calc(100vw - 16px)}.image-prompt-button[hidden]{display:none!important}#panel{z-index:2}';
     root.append(css);
@@ -27,7 +33,7 @@ globalThis.ImagePromptButtons ||= {
       }
       return right-left>=2 && bottom-top>=2 ? {left,top,right,bottom}:null;
     }
-    // One group per image: "提示词" always; "生图" and "图生图" when enabled in settings.
+    // One group per image: "提示词" (on unless turned off), "生图" and "图生图" when turned on in settings.
     function createButton(record) {
       const group=document.createElement('div');group.className='image-prompt-group';
       const make=(text,label,action)=>{const button=document.createElement('button');button.className='image-prompt-button';button.type='button';button.textContent=text;button.setAttribute('aria-label',label);button.dataset.action=action||'';
@@ -36,7 +42,7 @@ globalThis.ImagePromptButtons ||= {
       group.onpointerenter=()=>{record.onButton=true;schedule();};group.onpointerleave=()=>{record.onButton=false;schedule();};
       root.append(group);record.button=group;applyExtra(group);return group;
     }
-    function applyExtra(group){group.querySelector('[data-action="reverse-generate"]').hidden=!extra.reverse;group.querySelector('[data-action="image-to-image"]').hidden=!extra.i2i;}
+    function applyExtra(group){group.querySelector('[data-action=""]').hidden=!extra.prompt;group.querySelector('[data-action="reverse-generate"]').hidden=!extra.reverse;group.querySelector('[data-action="image-to-image"]').hidden=!extra.i2i;}
     // An image under something else gets no button. At the button's corner and at the image's centre the page's layers
     // are read from the top down (elementsFromPoint): reaching the image first means it is visible there; another image,
     // video or canvas first (a carousel slide in front, a picture on top) means it is covered; so does an element with a
@@ -67,7 +73,7 @@ globalThis.ImagePromptButtons ||= {
       for(const record of records.values()) {
         const rect=record.inView&&ImagePromptFilter.eligible(record.image)?visibleRect(record.image):null;
         const underPointer=rect && pointer && pointer.x>=rect.left && pointer.x<=rect.right && pointer.y>=rect.top && pointer.y<=rect.bottom;
-        const shown=(!requireActivation || activated) && rect && (record.image.currentSrc || record.image.src) && (mode==='all' || underPointer || record.onButton);
+        const shown=!blocked && anyButton() && (!requireActivation || activated) && rect && (record.image.currentSrc || record.image.src) && (mode==='all' || underPointer || record.onButton);
         if(!shown){if(record.button)record.button.hidden=true;continue;}
         const button=record.button || createButton(record);
         const width=button.offsetWidth||64,left=Math.max(6,Math.min(innerWidth-width-8,rect.left+6)),top=Math.max(6,Math.min(innerHeight-32,rect.top+6));
@@ -83,12 +89,13 @@ globalThis.ImagePromptButtons ||= {
     addEventListener('scroll',schedule,true);addEventListener('resize',schedule);
     resize.observe(document.documentElement);if(document.body)resize.observe(document.body);
     setInterval(()=>{if(document.visibilityState==='visible')schedule();},250);
-    chrome.storage?.local.get(['imageButtonMode','imageButtonsRequireActivation','imageButtonReverseGen','imageButtonImageToImage']).then(saved=>{mode=saved.imageButtonMode==='hover'?'hover':'all';requireActivation=saved.imageButtonsRequireActivation===true;extra={reverse:saved.imageButtonReverseGen===true,i2i:saved.imageButtonImageToImage===true};for(const record of records.values())if(record.button)applyExtra(record.button);schedule();});
-    chrome.storage?.onChanged?.addListener((changes,area)=>{if(area==='local'){if(changes.imageButtonMode)setMode(changes.imageButtonMode.newValue);if(changes.imageButtonsRequireActivation){requireActivation=changes.imageButtonsRequireActivation.newValue===true;schedule();}if(changes.imageButtonReverseGen||changes.imageButtonImageToImage){if(changes.imageButtonReverseGen)extra.reverse=changes.imageButtonReverseGen.newValue===true;if(changes.imageButtonImageToImage)extra.i2i=changes.imageButtonImageToImage.newValue===true;for(const record of records.values())if(record.button)applyExtra(record.button);schedule();}}});
+    const blockedBy=value=>ImagePromptButtons.siteBlocked(location.hostname,value===undefined?ImagePromptButtons.DEFAULT_BLOCKED:ImagePromptButtons.domains(value));
+    chrome.storage?.local.get(['imageButtonMode','imageButtonsRequireActivation','imageButtonPrompt','imageButtonReverseGen','imageButtonImageToImage','imageButtonBlockedSites']).then(saved=>{mode=saved.imageButtonMode==='hover'?'hover':'all';requireActivation=saved.imageButtonsRequireActivation===true;extra={prompt:saved.imageButtonPrompt!==false,reverse:saved.imageButtonReverseGen===true,i2i:saved.imageButtonImageToImage===true};blocked=blockedBy(saved.imageButtonBlockedSites);for(const record of records.values())if(record.button)applyExtra(record.button);schedule();});
+    chrome.storage?.onChanged?.addListener((changes,area)=>{if(area==='local'){if(changes.imageButtonMode)setMode(changes.imageButtonMode.newValue);if(changes.imageButtonsRequireActivation){requireActivation=changes.imageButtonsRequireActivation.newValue===true;schedule();}if(changes.imageButtonBlockedSites){blocked=blockedBy(changes.imageButtonBlockedSites.newValue);schedule();}if(changes.imageButtonPrompt||changes.imageButtonReverseGen||changes.imageButtonImageToImage){if(changes.imageButtonPrompt)extra.prompt=changes.imageButtonPrompt.newValue!==false;if(changes.imageButtonReverseGen)extra.reverse=changes.imageButtonReverseGen.newValue===true;if(changes.imageButtonImageToImage)extra.i2i=changes.imageButtonImageToImage.newValue===true;for(const record of records.values())if(record.button)applyExtra(record.button);schedule();}}});
     function setMode(value){mode=value==='hover'?'hover':'all';for(const record of records.values())record.onButton=false;schedule();}
     ImagePromptFilter.subscribe(schedule);
     // The eligible image under the pointer (for keyboard shortcuts), topmost-smallest wins for nested layouts.
-    function hovered(){if(!pointer)return null;let best=null,area=Infinity;for(const record of records.values()){if(!record.inView||!ImagePromptFilter.eligible(record.image))continue;const rect=visibleRect(record.image);if(!rect||pointer.x<rect.left||pointer.x>rect.right||pointer.y<rect.top||pointer.y>rect.bottom)continue;const size=(rect.right-rect.left)*(rect.bottom-rect.top);if(size<area){area=size;best=record.image;}}return best;}
+    function hovered(){if(!pointer||blocked)return null;let best=null,area=Infinity;for(const record of records.values()){if(!record.inView||!ImagePromptFilter.eligible(record.image))continue;const rect=visibleRect(record.image);if(!rect||pointer.x<rect.left||pointer.x>rect.right||pointer.y<rect.top||pointer.y>rect.bottom)continue;const size=(rect.right-rect.left)*(rect.bottom-rect.top);if(size<area){area=size;best=record.image;}}return best;}
     scan();return {setMode,refresh:schedule,activate(){activated=true;schedule();},hovered};
   }
 };

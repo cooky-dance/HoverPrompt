@@ -256,6 +256,8 @@ async function analyze(savedTask = null) {
     TaskTiming.finish(task);
     Object.assign(task,parsePrompts(routed.content,settings.promptLanguages),{status:'done',error:'',apiSource:routed.source,retryCount:routed.retries || 0,apiAttempts:routed.attempts || []});
     await saveTask(task);
+    // fetch and keep the full-size original now (Pinterest originals first), so image to image later starts from it
+    if(!task.originalImage)originalFor(task).catch(()=>{});
     if(currentId===id){showTask(task);setStatus("完成 / Done");}
   } catch(error) {
     if(task && !deletedTasks.has(id)) {
@@ -360,7 +362,7 @@ async function renderGenerations(root){
       await renderHistory();}));
     const feedback=document.createElement('span');feedback.className='copy-feedback history-copy-feedback';
     actions.append(button('history-copy','复制提示词 / Copy prompt',()=>CopyUI.copy(g.prompt||'',feedback)),feedback);
-    if(cover&&globalThis.CommunityShare)actions.append(button('history-share','发布到作品展示 / Post to showcase',()=>CommunityShare.open({images:group.items.map(item=>item.generation.image).filter(Boolean),prompt:g.prompt||'',model:g.model||g.sourceName||'',aspect:g.aspect||''})));
+    if(cover&&globalThis.CommunityShare)actions.append(button('history-share icon-btn','发布到作品展示 / Post to showcase',()=>CommunityShare.open({images:group.items.map(item=>item.generation.image).filter(Boolean),prompt:g.prompt||'',model:g.model||g.sourceName||'',aspect:g.aspect||''})));
     main.append(title,meta,summary);if(failure)main.append(failure);if(group.items.length>1)main.append(strip);main.append(actions);row.append(thumb,main);cornerControls(row,actions.querySelector('.history-delete'),actions.querySelector('.history-copy'));root.append(row);
   }
   queueMicrotask(()=>HistoryTools.update());
@@ -580,8 +582,15 @@ $("copyCurrent").onclick = () => CopyUI.copy($("zhGroup").hidden ? $("en").value
       configure.textContent = "⚙";configure.id = "openSettings";
       configure.title = "接口设置 / API";
       configure.onclick = () => chrome.runtime.openOptionsPage();
-      document.querySelector("header").append(configure);
-      const headerIcons={toggleHistory:'history',uploadLocalFile:'folder',toggleBatch:'batch',screenshotPage:'capture',openSettings:'settings'};
+      // sync with the cloud library now (shown while signed in to the cloud account; spins while it runs)
+      const syncNow=document.createElement("button");syncNow.id="syncNow";syncNow.title=LanguageUI.text("立即同步云端图库 / Sync with the cloud library now");
+      const paintSync=()=>{syncNow.hidden=!(typeof Cloud!=='undefined'&&Cloud.signedIn?.());};paintSync();document.addEventListener('imageprompt-cloud',paintSync);
+      syncNow.onclick=async()=>{if(syncNow.classList.contains('busy'))return;syncNow.classList.add('busy');syncNow.setAttribute('aria-busy','true');
+       try{const r=await Cloud.sync();syncNow.title=LanguageUI.text('已同步：上传 '+r.uploaded+' 条，下载 '+r.pulled+' 条 / Synced: '+r.uploaded+' up, '+r.pulled+' down');syncNow.classList.add('done');setTimeout(()=>syncNow.classList.remove('done'),1600);}
+       catch(e){syncNow.title=e.message;syncNow.classList.add('failed');setTimeout(()=>syncNow.classList.remove('failed'),2400);}
+       finally{syncNow.classList.remove('busy');syncNow.removeAttribute('aria-busy');syncNow.setAttribute('aria-label',syncNow.title);}};
+      document.querySelector("header").append(syncNow,configure);
+      const headerIcons={toggleHistory:'history',uploadLocalFile:'folder',toggleBatch:'batch',screenshotPage:'capture',syncNow:'sync',openSettings:'settings'};
       const iconize=()=>{for(const [id,icon] of Object.entries(headerIcons)){const button=$(id);if(!button||button.dataset.icon)continue;button.dataset.icon=icon;button.setAttribute('aria-label',button.title);button.textContent='';}};
       iconize();new MutationObserver(iconize).observe(document.querySelector("header"),{childList:true});
       // Shift / Ctrl hint (overlay, no layout shift): 0.5 s on the first scroll after the extension loads
@@ -737,7 +746,10 @@ const GenFlow=(()=>{
    // URL-mode sources get the high-resolution original when known, else the page image address.
    // image to image starts from the original (cached, or fetched and cached now), the 1600 px copy when there is none
    const reference=generation.mode==='image'?(await originalFor(task))||task.image:null;
-   const result=await ImageGen.route({prompt,image:reference,imageUrl:generation.mode==='image'?task.imageUrl:undefined,originalUrl:generation.mode==='image'?task.originalUrl:undefined,aspect:generation.aspect||undefined});
+   // a hosted copy of the reference (ImgBB, for URL-mode sources) is kept on the record and synced, so the same image is
+   // not uploaded again by the next generation or on another device while it has not expired
+   const keepHosted=async info=>{task.hostedRef=info;const fresh=await getTask(task.id);if(fresh){fresh.hostedRef=info;await saveTask(fresh);}};
+   const result=await ImageGen.route({prompt,image:reference,imageUrl:generation.mode==='image'?task.imageUrl:undefined,originalUrl:generation.mode==='image'?task.originalUrl:undefined,aspect:generation.aspect||undefined,...(generation.mode==='image'?{hosted:task.hostedRef,onHosted:keepHosted}:{})});
    Object.assign(generation,{status:'done',image:result.images[0],model:result.model,sourceName:result.sourceName,size:result.size,runMs:result.runMs,finishedAt:Date.now()});
    generation.path=await writeToDisk(task,generation);
   }catch(error){Object.assign(generation,{status:'failed',error:error.message,finishedAt:Date.now()});}

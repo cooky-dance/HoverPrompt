@@ -6,7 +6,7 @@
 // their prompt (without the n= line) so the CLI can read and download them.
 (()=>{
  const $=id=>document.getElementById(id);
- let zh=true;const t=(cn,en)=>zh?cn:en;const T=pair=>{const [cn,en]=String(pair).split('|');return zh?cn:(en??cn);};
+ let zh=true;const t=(cn,en)=>PluginKit.t(cn,en),T=pair=>PluginKit.T(pair);
  const RATIOS=['9:21','9:16','2:3','3:4','4:5','1:1','5:4','4:3','3:2','16:9','21:9'],ORIENT={portrait:'2:3',square:'1:1',landscape:'3:2'};
  const HOME='https://chatgpt.com/',UPLOAD_WINDOW=3*3600000,UPLOAD_CAP=80,MAX_N=10,PAGE=20;
  const CLOUD_URL='https://hoverprompt.com';
@@ -226,11 +226,31 @@
   return {id:r.id,prompt:r.zh||'',body:r.generations?.[0]?.prompt||r.zh||'',ratio:r.studio?.ratio||r.generations?.[0]?.aspect||'',sessions:r.studio?.sessions,prefix:r.studio?.prefix,refCount:r.generations?.find(g=>g.references!=null)?.references,skillName:r.studio?.skill,skillValue:r.studio?.skillValue||'',total:r.studio?.count||jobs.reduce((n,j)=>n+(j.n||1),0),
    refs:r.generations?.[0]?.references&&r.image&&!r.generations.some(g=>g.image===r.image)?[r.image]:[],createdAt:r.createdAt,saved:true,jobs};
  }
- async function loadFeed(){
-  allRecords=(await store('readonly',s=>s.getAll())||[]).filter(r=>['chatgpt-studio','import'].includes(RecordKinds.kindOf(r))).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-  batches=allRecords.slice(0,shown).map(batchFromRecord);renderFeed();
+ // The studio's runs as small entries, newest first: {id, createdAt, names: [[ChatGPT name, content name]…]}, read one
+ // record at a time with a cursor. Whole records (with their images) are read only for the runs on screen, so a large
+ // library does not sit in memory.
+ async function readIndex(){
+  const database=await db();
+  return new Promise((resolve,reject)=>{const out=[],tx=database.transaction('tasks','readonly'),cursor=tx.objectStore('tasks').openCursor();
+   cursor.onsuccess=()=>{const c=cursor.result;if(!c)return;const r=c.value;
+    if(['chatgpt-studio','import'].includes(RecordKinds.kindOf(r)))out.push({id:r.id,createdAt:r.createdAt||0,names:(r.generations||[]).filter(g=>g.image&&g.chatgptName).map(g=>[g.chatgptName,g.refName])});
+    c.continue();};
+   tx.oncomplete=()=>{database.close();resolve(out.sort((a,b)=>b.createdAt-a.createdAt));};tx.onerror=()=>{database.close();reject(tx.error);};});
  }
- $('more').onclick=()=>{shown+=PAGE;const running=run?[run.batch]:[];batches=[...running,...allRecords.slice(0,shown).filter(r=>!running.some(b=>b.id===r.id)).map(batchFromRecord)];renderFeed();};
+ // whole records for these entries (runs already on screen are reused)
+ async function batchesFor(entries){
+  const have=new Map(batches.map(b=>[b.id,b])),need=entries.filter(e=>!have.has(e.id));
+  if(need.length){const database=await db();const records=await new Promise((resolve,reject)=>{const out=new Map(),tx=database.transaction('tasks','readonly'),st=tx.objectStore('tasks');
+   for(const e of need){const req=st.get(e.id);req.onsuccess=()=>{if(req.result)out.set(e.id,req.result);};}
+   tx.oncomplete=()=>{database.close();resolve(out);};tx.onerror=()=>{database.close();reject(tx.error);};});
+   for(const [id,r] of records)have.set(id,batchFromRecord(r));}
+  return entries.map(e=>have.get(e.id)).filter(Boolean);
+ }
+ async function loadFeed(){
+  allRecords=await readIndex();batches=[];
+  batches=await batchesFor(allRecords.slice(0,shown));renderFeed();
+ }
+ $('more').onclick=async()=>{shown+=PAGE;const running=run?[run.batch]:[];batches=[...running,...(await batchesFor(allRecords.slice(0,shown).filter(e=>!running.some(b=>b.id===e.id))))];renderFeed();};
 
  // ---- conversations (worker tabs) ----
  // They live in one browser window, reused across runs (or, by choice, as background tabs in this window). Nothing is
@@ -510,6 +530,31 @@
  const weight=j=>j.n||1;
  const batchPercent=b=>{const total=b.jobs.reduce((n,j)=>n+weight(j),0)||1;return Math.round(b.jobs.reduce((sum,j)=>sum+weight(j)*(j.status==='done'||j.status==='failed'?100:j.percent||0),0)/total);};
  function dayLabel(time){const d=new Date(time),today=new Date();const same=(a,b)=>a.toDateString()===b.toDateString();if(same(d,today))return t('今天','Today');const y=new Date(today);y.setDate(today.getDate()-1);if(same(d,y))return t('昨天','Yesterday');return d.toLocaleDateString(zh?'zh-CN':'en',{month:'long',day:'numeric'});}
+ // Grid images are small JPEG thumbnails (made when a cell comes near the screen, two at a time, at most 400 kept);
+ // the viewer, downloads and references use the full image. Full-size data URLs in hundreds of <img> made the page
+ // decode every image at full size.
+ const THUMB=360,thumbs=new Map(),thumbWaiting=[];let thumbBusy=0;
+ const nearScreen=typeof IntersectionObserver==='function'?new IntersectionObserver(entries=>{for(const e of entries)if(e.isIntersecting){nearScreen.unobserve(e.target);thumbWaiting.push(e.target);pumpThumbs();}},{rootMargin:'800px'}):null;
+ function thumbInto(img,src,key){
+  img.dataset.thumbKey=key;img._full=src;const ready=thumbs.get(key);
+  if(ready){thumbs.delete(key);thumbs.set(key,ready);img.src=ready;return;}
+  if(!nearScreen||typeof createImageBitmap!=='function'){img.src=src;return;}
+  nearScreen.observe(img);
+ }
+ async function pumpThumbs(){
+  while(thumbBusy<2&&thumbWaiting.length){const img=thumbWaiting.shift();if(!img.isConnected)continue;thumbBusy++;
+   makeThumb(img).catch(()=>{img.src=img._full;}).finally(()=>{thumbBusy--;pumpThumbs();});}
+ }
+ async function makeThumb(img){
+  const key=img.dataset.thumbKey;let url=thumbs.get(key);
+  if(!url){const blob=await (await fetch(img._full)).blob(),probe=await createImageBitmap(blob),w=probe.width,h=probe.height;probe.close?.();
+   if(Math.max(w,h)<=THUMB*1.5){img.src=img._full;return;}
+   const scale=THUMB/Math.min(w,h),bitmap=await createImageBitmap(blob,{resizeWidth:Math.round(w*scale),resizeHeight:Math.round(h*scale),resizeQuality:'medium'});
+   const canvas=new OffscreenCanvas(bitmap.width,bitmap.height);canvas.getContext('2d').drawImage(bitmap,0,0);bitmap.close?.();
+   url=URL.createObjectURL(await canvas.convertToBlob({type:'image/jpeg',quality:.85}));thumbs.set(key,url);
+   while(thumbs.size>400){const [old,oldUrl]=thumbs.entries().next().value;thumbs.delete(old);URL.revokeObjectURL(oldUrl);}}
+  img.src=url;
+ }
  function cells(batch){
   const out=[];let number=0;
   for(const job of batch.jobs){
@@ -517,7 +562,7 @@
     const cell=document.createElement('div');cell.className='cell done';cell.dataset.job=job.id;const label=t('生成图 ','Generated image ')+(++number);
     const index=number;
     const pick=document.createElement('button');pick.type='button';pick.className='cell-pick';pick.title=t('点击查看大图','Click to view');pick.setAttribute('aria-label',label+' · '+pick.title);
-    const img=document.createElement('img');img.src=image;img.alt='';img.loading='lazy';pick.append(img);pick.onclick=()=>openViewer(batch,job,k,index);
+    const img=document.createElement('img');img.alt='';img.decoding='async';thumbInto(img,image,job.id+':'+k);pick.append(img);pick.onclick=()=>openViewer(batch,job,k,index);
     const ref=document.createElement('button');ref.type='button';ref.className='cell-ref';ref.title=t('加为参考图','Use as a reference');ref.setAttribute('aria-label',label+' · '+ref.title);ref.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';ref.onclick=event=>{event.stopPropagation();addReference(image,cell,meta);};
     const tools=document.createElement('div');tools.className='cell-tools';
     const tool=(icon,title,fn)=>{const b=document.createElement('button');b.type='button';b.title=title;b.setAttribute('aria-label',title);b.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true">'+icon+'</svg>';b.onclick=event=>{event.stopPropagation();fn();};tools.append(b);};
@@ -530,7 +575,8 @@
  }
  // a generated image becomes a reference in the composer (content-named, so it can be pre-uploaded and @-referred)
  // ChatGPT names are used only when no other recorded image has the same one (titles can repeat; a wrong match must not happen)
- function uniqueChatgptName(name){if(!name)return false;const images=new Set();for(const b of [...batches,...allRecords.map(batchFromRecord)])for(const j of b.jobs)for(const m of j.meta||[])if(m?.chatgptName===name)images.add(m.refName);return images.size===1;}
+ function uniqueChatgptName(name){if(!name)return false;const images=new Set();for(const b of batches)for(const j of b.jobs)for(const m of j.meta||[])if(m?.chatgptName===name)images.add(m.refName);
+  for(const e of allRecords)for(const [n,ref] of e.names||[])if(n===name)images.add(ref);return images.size===1;}
  async function addReference(src,cell,meta){
   const name=meta?.refName||await identity(src,'ref');
   if(refs.some(r=>r.name===name)){notice(t('这张图已经在参考图里','This image is already a reference'),'info');return;}
@@ -647,7 +693,7 @@
   let day='';for(const batch of visible){const label=dayLabel(batch.createdAt);if(label!==day){day=label;const h=document.createElement('h2');h.className='day';h.textContent=label;feed.append(h);}feed.append(batchCard(batch));}
   $('more').hidden=allRecords.length<=shown;
  }
- async function loadRecordsIndex(){allRecords=(await store('readonly',s=>s.getAll())||[]).filter(r=>['chatgpt-studio','import'].includes(RecordKinds.kindOf(r))).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));$('more').hidden=allRecords.length<=shown;}
+ async function loadRecordsIndex(){allRecords=await readIndex();$('more').hidden=allRecords.length<=shown;}
  function renderBatch(batch){const old=document.querySelector('.batch[data-batch="'+batch.id+'"]');if(old)old.replaceWith(batchCard(batch));}
  function renderJob(batch,job){
   const card=document.querySelector('.batch[data-batch="'+batch.id+'"]');if(!card)return;

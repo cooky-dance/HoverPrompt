@@ -1,0 +1,17 @@
+{
+  "extName": {
+    "message": "HoverPrompt – промпт по картинке",
+    "description": "Extension name in the store and browser"
+  },
+  "extDescription": {
+    "message": "Превращайте любое изображение в сети в подробный AI-промпт одним кликом, создавайте новые картинки и храните промпты в библиотеке.",
+    "description": "Short store description (up to 132 characters)"
+  },
+  "actionTitle": {
+    "message": "Открыть HoverPrompt"
+  },
+  "menuAnalyze": {
+    "message": "Получить промпт для изображения",
+    "description": "Right-click menu item on images"
+  }
+}

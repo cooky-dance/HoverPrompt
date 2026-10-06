@@ -2,7 +2,8 @@
 // Uses the HoverPrompt account the extension is signed in to (cloudConfig.token); nothing happens without it.
 globalThis.CommunityShare=(()=>{
  const SITE='https://hoverprompt.com';
- const T=value=>globalThis.LanguageUI?.text?LanguageUI.text(value):String(value).split(' / ')[navigator.language?.startsWith('zh')?0:1]??String(value);
+ // the settings page translates through LanguageUI; plugin pages (the studio) through PluginKit; otherwise the browser language
+ const T=value=>{if(globalThis.LanguageUI?.text)return LanguageUI.text(value);const [cn,...en]=String(value).split(' / ');if(globalThis.PluginKit)return PluginKit.t(cn,en.join(' / ')||undefined);return (navigator.language?.startsWith('zh')?cn:en.join(' / '))||cn;};
  const base=config=>{try{const url=new URL(config?.baseUrl||'');if(url.protocol==='https:'||url.protocol==='http:'&&['localhost','127.0.0.1'].includes(url.hostname))return url.origin;}catch{}return SITE;};
  async function account(){const {cloudConfig}=await chrome.storage.local.get(['cloudConfig']);return {base:base(cloudConfig),token:cloudConfig?.token||null};}
  async function api(path,data){

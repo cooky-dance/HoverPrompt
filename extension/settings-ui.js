@@ -108,6 +108,8 @@ const LanguageUI=(()=>{
     state.historyDisplayMode=['default','all','selected'].includes(state.historyDisplayMode)?state.historyDisplayMode:'default';state.historyLanguages=Array.isArray(state.historyLanguages)?state.historyLanguages.filter(code=>typeof code==='string'):['zh-CN','en'];
     committed=structuredClone({...state,promptLanguages:normalize(saved.promptLanguages||state.promptLanguages)});if(state.promptLanguageRequest)save().catch(()=>{});
     $('uiLanguage').value=state.uiLanguage;
+    // interface sounds (sounds.js): on unless turned off
+    if($('uiSounds')){const sv=await chrome.storage.local.get(['uiSounds']);$('uiSounds').checked=sv.uiSounds!==false;$('uiSounds').onchange=()=>globalThis.HPSound?.set($('uiSounds').checked);}
     $('uiLanguage').onchange=async()=>{state.uiLanguage=$('uiLanguage').value;committed.uiLanguage=state.uiLanguage;await chrome.storage.local.set({uiLanguage:state.uiLanguage});translate();notify();};
     $('historyDisplayMode').onchange=async()=>{state.historyDisplayMode=$('historyDisplayMode').value;await save();};
     $('saveLanguages').onclick=()=>commit().catch(error=>$('languageSaveStatus').textContent=error.message);

@@ -57,7 +57,7 @@ globalThis.CreditsPanel=(()=>{
   const {user,quota:q}=account,credits=globalThis.CreditsBadge?.fromQuota(q),plan=q.plan==='pro'&&!q.trial?'pro':'free',sync=q.sync||{used:0,limit:0,lots:[]};
   // header: who, plan, total credits
   const head=el('div','cp-head');const who=el('div','cp-who');const img=el('img','cp-avatar');img.alt='';img.src='avatars/'+(user.avatar||AVATARS[hash(user.id)%16])+'.svg';
-  const id=el('div','cp-id');id.append(el('strong','',user.name||user.email),el('span','',user.email));who.append(img,id,el('span','plan-badge '+(q.trial?'pro':plan),q.trial?T('Plus 体验 / Plus trial'):plan==='pro'?'PRO':'FREE'));
+  const id=el('div','cp-id');id.append(el('strong','',user.name||user.email),el('span','',user.email));who.append(img,id,el('span','plan-badge '+(q.trial?'pro':plan),q.trial?T('Plus 体验 / Plus trial'):plan==='pro'?'PLUS':'FREE'));
   const total=el('div','cp-total');total.innerHTML='<span class="cp-bolt">'+bolt+'</span><b></b><small></small>';total.querySelector('b').textContent=credits?.remaining??0;total.querySelector('small').textContent=T('剩余积分 / credits left');
   head.append(who,total,closeButton);dialog.append(head);
   if(reason==='quota'){const alert=el('div','cp-alert');alert.append(el('strong','',T('云端积分已用完 / Cloud credits are used up')),el('span','',T('购买积分包或开通 Plus 继续使用；也可以切换到本地模式，用自己的 API 或本机模型。 / Buy a pack or upgrade to Plus to continue, or switch to local mode with your own API or local model.')));dialog.append(alert);}

@@ -52,9 +52,15 @@ globalThis.InterfaceLocale=(()=>{
  ['Service mode','Режим сервиса','サービスモード','서비스 모드','सेवा मोड','وضع الخدمة'],['Cloud service URL','Адрес облачного сервиса','クラウドサービス URL','클라우드 URL','क्लाउड सेवा URL','رابط الخدمة السحابية'],['Sign in','Войти','ログイン','로그인','साइन इन','تسجيل الدخول'],['Account','Аккаунт','アカウント','계정','खाता','الحساب'],['Sync now','Синхронизировать','今すぐ同期','지금 동기화','अभी सिंक करें','مزامنة الآن'],['Sign out','Выйти','ログアウト','로그아웃','साइन आउट','تسجيل الخروج']
  ];
  const allEntries=[...entries,...(globalThis.InterfaceLocaleExtra||[])];
- const maps=Object.fromEntries(codes.map((code,index)=>[code,Object.fromEntries(allEntries.map(row=>[row[0],row[index+1]]))]));
- function translate(value,code){const parts=splitBilingual(value),english=parts.length>1?parts.slice(1).join(' / '):String(value);const key=english.trim();if(maps[code]?.[key])return english.replace(key,maps[code][key]);
- for(const [template,translation] of Object.entries(maps[code]||{})){if(!template.includes('{'))continue;const names=[],pattern=template.split(/(\{\w+\})/).map(part=>{if(/^\{/.test(part)){names.push(part.slice(1,-1));return '(\\d+)';}return part.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}).join('');const match=new RegExp('^'+pattern+'$').exec(key);if(match){let result=translation;names.forEach((name,index)=>result=result.replaceAll('{'+name+'}',match[index+1]));return result;}}
+ // Tables are built per language the first time it is used (Chinese and English need none), and the {n} templates are
+ // compiled once: a miss used to rebuild a regular expression for every template on every call, which slowed rendering.
+ const maps={},templates={},misses={};
+ const mapOf=code=>{const index=codes.indexOf(code);if(index<0)return null;return maps[code]||=Object.fromEntries(allEntries.map(row=>[row[0],row[index+1]]));};
+ const templatesOf=code=>templates[code]||=Object.entries(mapOf(code)||{}).filter(([template])=>template.includes('{')).map(([template,translation])=>{const names=[],pattern=template.split(/(\{\w+\})/).map(part=>{if(/^\{/.test(part)){names.push(part.slice(1,-1));return '(\\d+)';}return part.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}).join('');return {re:new RegExp('^'+pattern+'$'),names,translation};});
+ function translate(value,code){const parts=splitBilingual(value),english=parts.length>1?parts.slice(1).join(' / '):String(value);const key=english.trim();const map=mapOf(code);if(!map)return english;if(map[key])return english.replace(key,map[key]);
+ const missed=misses[code]||=new Set();if(missed.has(key))return english;
+ for(const {re,names,translation} of templatesOf(code)){const match=re.exec(key);if(match){let result=translation;names.forEach((name,index)=>result=result.replaceAll('{'+name+'}',match[index+1]));return result;}}
+ if(missed.size<5000)missed.add(key);
  return english;}
  return {translate};
 })();

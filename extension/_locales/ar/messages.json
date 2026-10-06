@@ -1,0 +1,17 @@
+{
+  "extName": {
+    "message": "HoverPrompt – من الصورة إلى موجّه",
+    "description": "Extension name in the store and browser"
+  },
+  "extDescription": {
+    "message": "حوّل أي صورة على الويب إلى موجّه ذكاء اصطناعي مفصّل بنقرة واحدة، وأنشئ صورًا جديدة واحفظ كل موجّهاتك في مكتبتك.",
+    "description": "Short store description (up to 132 characters)"
+  },
+  "actionTitle": {
+    "message": "افتح HoverPrompt"
+  },
+  "menuAnalyze": {
+    "message": "احصل على موجّه لهذه الصورة",
+    "description": "Right-click menu item on images"
+  }
+}

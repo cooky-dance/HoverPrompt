@@ -120,13 +120,22 @@ globalThis.ImageGenUI=(()=>{
   // Interface page: page mini-button switches, saved immediately.
   const controls=document.getElementById('interfaceControls');
   if(controls&&!$('imageButtonReverseGen')){
-   for(const [id,text] of [['imageButtonReverseGen','在网页图片上显示「生图」小框（先反推再文生图）/ Show "Generate" button on page images'],['imageButtonImageToImage','在网页图片上显示「图生图」小框 / Show "Image to image" button on page images']]){
+   // each page mini-button on its own: 提示词 is on unless turned off, 生图 and 图生图 are off unless turned on
+   const SWITCHES=[['imageButtonPrompt','在网页图片上显示「提示词」小框 / Show "Prompt" button on page images',true],['imageButtonReverseGen','在网页图片上显示「生图」小框（先反推再文生图）/ Show "Generate" button on page images',false],['imageButtonImageToImage','在网页图片上显示「图生图」小框 / Show "Image to image" button on page images',false]];
+   for(const [id,text] of SWITCHES){
     const label=document.createElement('label');label.className='checkbox-setting';label.innerHTML='<input type="checkbox" id="'+id+'"> '+text;controls.append(label);
    }
-   const saved=await chrome.storage.local.get(['imageButtonReverseGen','imageButtonImageToImage']);
-   for(const id of ['imageButtonReverseGen','imageButtonImageToImage']){$(id).checked=saved[id]===true;$(id).onchange=()=>chrome.storage.local.set({[id]:$(id).checked});}
+   // sites where no mini-button appears (one domain per line, subdomains included); hoverprompt.com by default
+   const sites=document.createElement('label');sites.className='blocked-sites';sites.innerHTML='不显示小框的网站（每行一个域名，含子域名）/ Sites without page buttons (one domain per line, subdomains included)<textarea id="imageButtonBlockedSites" rows="4" spellcheck="false" placeholder="hoverprompt.com"></textarea><small class="hint" id="blockedSitesNote"></small>';controls.append(sites);
+   const saved=await chrome.storage.local.get([...SWITCHES.map(([id])=>id),'imageButtonBlockedSites']);
+   for(const [id,,on] of SWITCHES){$(id).checked=on?saved[id]!==false:saved[id]===true;$(id).onchange=()=>chrome.storage.local.set({[id]:$(id).checked});}
+   const area=$('imageButtonBlockedSites'),current=saved.imageButtonBlockedSites===undefined?ImagePromptButtonsDefaults():saved.imageButtonBlockedSites;area.value=(Array.isArray(current)?current:[]).join('\n');
+   area.onchange=async()=>{const list=domainsOf(area.value);await chrome.storage.local.set({imageButtonBlockedSites:list});area.value=list.join('\n');$('blockedSitesNote').textContent=LanguageUI.text('已保存 / Saved');};
   }
   if(controls&&!$('shortcutSettings'))await shortcutEditor(controls);
+  function ImagePromptButtonsDefaults(){return ['hoverprompt.com'];}
+  // same rules as the page buttons (image-buttons.js): host names only, no scheme, path or "www."
+  function domainsOf(value){return [...new Set(String(value||'').split(/[\s,;]+/).map(d=>d.trim().toLowerCase().replace(/^[a-z]+:\/\//,'').replace(/[\/?#:].*$/,'').replace(/^\*\.|^www\./,'').replace(/\.$/,'')).filter(d=>/^[a-z0-9.-]+\.[a-z0-9-]+$|^localhost$|^\d+\.\d+\.\d+\.\d+$/.test(d)))].slice(0,200);}
  }
  // Shortcut editor: click a key box, press a single key (Esc cancels, Backspace clears); duplicates are refused.
  async function shortcutEditor(controls){

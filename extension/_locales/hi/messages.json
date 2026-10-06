@@ -1,0 +1,17 @@
+{
+  "extName": {
+    "message": "HoverPrompt – इमेज से प्रॉम्प्ट",
+    "description": "Extension name in the store and browser"
+  },
+  "extDescription": {
+    "message": "वेब की किसी भी इमेज को एक क्लिक में विस्तृत AI प्रॉम्प्ट में बदलें, नई इमेज बनाएँ और हर प्रॉम्प्ट अपनी लाइब्रेरी में रखें।",
+    "description": "Short store description (up to 132 characters)"
+  },
+  "actionTitle": {
+    "message": "HoverPrompt खोलें"
+  },
+  "menuAnalyze": {
+    "message": "इस इमेज का प्रॉम्प्ट पाएँ",
+    "description": "Right-click menu item on images"
+  }
+}

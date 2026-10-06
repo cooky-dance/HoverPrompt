@@ -1,0 +1,17 @@
+{
+  "extName": {
+    "message": "HoverPrompt – 画像からプロンプト",
+    "description": "Extension name in the store and browser"
+  },
+  "extDescription": {
+    "message": "気になる画像をワンクリックで詳しい AI プロンプトに。新しい画像も生成でき、すべてのプロンプトをライブラリに保存します。",
+    "description": "Short store description (up to 132 characters)"
+  },
+  "actionTitle": {
+    "message": "HoverPrompt を開く"
+  },
+  "menuAnalyze": {
+    "message": "この画像のプロンプトを取得",
+    "description": "Right-click menu item on images"
+  }
+}
