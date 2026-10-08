@@ -23,6 +23,10 @@
   <a href="README.ar.md">العربية</a>
 </p>
 
+<p align="center"><b>🆓 Free to use</b> — the extension is free; local / your own API needs no account.<br>
+Optional cloud: <b>10</b> reverse prompts / month on Free, plus a <b>20</b>-credit install gift; Plus and credit packs are optional.</p>
+
+
 ---
 
 ## Everything in one extension
