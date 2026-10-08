@@ -13,7 +13,13 @@
   <a href="https://hoverprompt.com/pricing?lang=zh-CN">价格</a> ·
   <a href="https://hoverprompt.com/community?lang=zh-CN">社区</a> ·
   <a href="https://hoverprompt.com/models?lang=zh-CN">AI 模型说明</a> ·
-  <a href="README.md"><b>English</b></a>
+  <a href="README.md">English</a> ·
+  <b>简体中文</b> ·
+  <a href="README.ja.md">日本語</a> ·
+  <a href="README.ko.md">한국어</a> ·
+  <a href="README.ru.md">Русский</a> ·
+  <a href="README.hi.md">हिन्दी</a> ·
+  <a href="README.ar.md">العربية</a>
 </p>
 
 ---
