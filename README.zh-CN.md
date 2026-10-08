@@ -5,7 +5,7 @@
 <p align="center">
   <b>功能全面的一站式 AI 生图提示词扩展。</b><br>
   任意图片反推提示词 · 用自己的 API、ChatGPT 或云端积分生图 ·<br>
-  自定义 Skill · 可搜索的资料库 · 提示词社区 —— 全在一个 Chrome / Edge 扩展里。
+  自定义 Skill · 可搜索的资料库 · 提示词社区 · **CLI**（可连接账号额度，并可控制扩展自动识别图片、生成提示词）—— 全在一个 Chrome / Edge 扩展里。
 </p>
 
 <p align="center">
@@ -36,8 +36,38 @@
 | 💬 **提示词社区** | 分享提示词和 AI 作品、关注创作者，看到喜欢的提示词一键生图 |
 | 📚 **资料库** | 所有提示词和图片都在这里，支持全语言搜索，有成功率和耗时统计；可导出为 ZIP |
 | 🗂️ **整页采集与批量** | 整页收集参考图（自动跳过广告、图标和重复图），小红书笔记整篇反推，批量图生图 |
-| ⌨️ **CLI 与 Agent** | 用命令行或 AI Agent 读取资料库、扫描网页、跑批量流水线 |
+| ⌨️ **CLI 与 Agent** | **重点：** 可连接 HoverPrompt **账号额度（积分）**；也可通过本地桥接**控制扩展**自动识别网页图片并生成提示词；同时可读资料库、把现成指令交给 AI Agent |
 | 🔒 **本地优先** | 不登录也能用；你的 API Key 不会离开浏览器 |
+
+
+> 面向**设计**、**创意**、**产品**与 **AI 影视**创作者打造。
+
+## CLI — 连接账号额度 & 控制扩展
+
+[`extension/cli`](extension/cli) 里的 Node.js CLI（`imageprompt.mjs`）是 HoverPrompt 的一等能力：
+
+1. **连接账号额度** — `login` 在 [hoverprompt.com](https://hoverprompt.com/?lang=zh-CN) 完成设备授权；之后 `analyze` / `batch` 会消耗你的**云端积分**（由服务器扣费）。`me` 可查看额度。
+2. **控制浏览器扩展** — 安装 Native Messaging 桥接（Windows / Chrome / Edge），打开**设置 → 本地 CLI**，用 `local search` / `local scan` + `local submit` 让扩展**自动识别网页图片并排队反推提示词**。
+
+```powershell
+# 在 extension/ 目录执行；扩展 ID 见 chrome://extensions（或 设置 → 本地 CLI）
+powershell -ExecutionPolicy Bypass -File cli/install-local-bridge.ps1 -ExtensionId 你的扩展ID
+$cli = Join-Path $env:LOCALAPPDATA 'HoverPrompt\cli\imageprompt.mjs'
+
+# 连接账号额度（云端 API）
+node $cli login
+node $cli me
+node $cli analyze photo.jpg --wait true
+
+# 控制扩展：搜图 / 扫页 → 自动反推（走扩展里配置的渠道）
+# 请在「设置 → 本地 CLI」开启「本地 CLI 缓存桥接」和「允许 CLI 扫描网页和提交任务」
+node $cli local doctor
+node $cli local search --site pinterest.com --query "古风" --scope scroll
+node $cli local submit --scan-id SCAN_ID --limit 20
+node $cli local get TASK_ID
+```
+
+`local search` / `local scan` 只采集图片地址，不调模型；`local submit` 会按扩展的运行模式走个人 API 或**云端积分**。凭证：`~/.hoverprompt/credentials.json`（或环境变量 `IMAGEPROMPT_TOKEN`）。完整命令见 [docs/CLI-AGENT.md](docs/CLI-AGENT.md)。
 
 ## 功能亮点
 
@@ -100,21 +130,7 @@ Skill 是附加在反推指令上的写作规则，比如胶片型号和颗粒�
 本地模式下使用你自己的模型和生图 API（设置 → **API 来源** 和 **生成设置**）。
 
 - **本仓库不包含任何 API Key、令牌或密钥**，也请不要把你自己的提交进来。
-- 你填写的 Key 只保存在浏览器的扩展存储（`chrome.storage.local`）里，只发送到你配置的 API 地址，不会上传到 HoverPrompt。
-- 也可以用本机模型（例如 `localhost` 上的 Ollama），完全免费。
-
-## 本地 CLI
-
-`extension/cli` 里是一个小型 Node.js 命令行工具和 Native Messaging 桥接，用来读取扩展的本地缓存：
-
-```powershell
-# 在 extension 文件夹里运行（Windows，Chrome / Edge）；扩展 ID 在 chrome://extensions 页面上可以看到
-powershell -ExecutionPolicy Bypass -File cli/install-local-bridge.ps1 -ExtensionId 你的扩展ID
-node "$env:LOCALAPPDATA\HoverPrompt\cli\imageprompt.mjs" local doctor
-```
-
-然后打开**设置 → 本地 CLI → 本地 CLI 缓存桥接**。全部命令和 Agent 指令见 [docs/CLI-AGENT.md](docs/CLI-AGENT.md)。
-
+- 你填写的 Key 只保存在浏览器的扩展存储（`chrome
 ## 目录结构
 
 ```

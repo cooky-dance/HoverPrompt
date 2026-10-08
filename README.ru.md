@@ -5,7 +5,7 @@
 <p align="center">
   <b>Универсальное расширение для AI-промптов по изображениям.</b><br>
   Реверс любого изображения в промпт · генерация своим API, через ChatGPT или облачные кредиты ·<br>
-  свои навыки · библиотека с поиском · сообщество промптов — в одном расширении Chrome / Edge.
+  свои навыки · библиотека с поиском · сообщество промптов · **CLI** (квота аккаунта и управление расширением для авто-распознавания изображений и генерации промптов) — в одном расширении Chrome / Edge.
 </p>
 
 <p align="center">
@@ -36,8 +36,34 @@
 | 💬 **Сообщество** | Делитесь промптами и AI-артом, подписывайтесь на авторов, генерируйте по любому общему промпту в один клик |
 | 📚 **Библиотека** | Все промпты и изображения с поиском на любом языке, с долей успеха и временем; экспорт в ZIP |
 | 🗂️ **Сбор со страницы и пакетная обработка** | Соберите референсы со всей страницы (реклама, иконки и дубли пропускаются), реверс всей заметки Xiaohongshu, пакетное изображение→изображение |
-| ⌨️ **CLI и агенты** | Читайте библиотеку, сканируйте страницы и запускайте пайплайны из командной строки или AI-агента |
+| ⌨️ **CLI и агенты** | **Акцент:** подключение к **кредитам аккаунта** HoverPrompt или управление расширением для **авто-сканирования изображений и генерации промптов**; также чтение библиотеки и инструкции для AI-агента |
 | 🔒 **Сначала локально** | Работает без аккаунта; ваши API-ключи не покидают браузер |
+
+
+> Создано для **дизайнеров**, **креативщиков**, **продуктовых** команд и авторов **AI‑кино и видео**.
+
+## CLI — кредиты аккаунта и управление расширением
+
+Node.js CLI в [`extension/cli`](extension/cli) (`imageprompt.mjs`) — полноценная часть HoverPrompt:
+
+1. **Квота аккаунта** — `login` открывает подтверждение устройства на [hoverprompt.com](https://hoverprompt.com); затем `analyze` / `batch` расходуют **облачные кредиты**. `me` показывает квоту.
+2. **Управление расширением** — установите мост Native Messaging (Windows / Chrome / Edge), включите **Настройки → Local CLI**, используйте `local search` / `local scan` + `local submit`, чтобы расширение **само находило изображения на странице и ставило задачи на обратный промпт**.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File cli/install-local-bridge.ps1 -ExtensionId YOUR_EXTENSION_ID
+$cli = Join-Path $env:LOCALAPPDATA 'HoverPrompt\cli\imageprompt.mjs'
+
+node $cli login
+node $cli me
+node $cli analyze photo.jpg --wait true
+
+node $cli local doctor
+node $cli local search --site pinterest.com --query "film portrait" --scope scroll
+node $cli local submit --scan-id SCAN_ID --limit 20
+node $cli local get TASK_ID
+```
+
+`local search` / `local scan` только собирают URL (без вызова модели). `local submit` использует личный API или **облачные кредиты** — как настроено в расширении. Токен: `~/.hoverprompt/credentials.json` (или `IMAGEPROMPT_TOKEN`). Полный список: [docs/CLI-AGENT.md](docs/CLI-AGENT.md).
 
 ## Основные возможности
 
@@ -103,17 +129,6 @@
 - Введённые ключи хранятся только в хранилище расширения браузера (`chrome.storage.local`) и отправляются только на настроенный вами API-эндпоинт. На HoverPrompt они не загружаются.
 - Локальные модели (например Ollama на `localhost`) тоже работают и ничего не стоят.
 
-## Локальный CLI
-
-В папке `extension/cli` — небольшой Node.js CLI и мост Native Messaging, которые читают локальный кэш расширения:
-
-```powershell
-# from the extension folder, on Windows (Chrome / Edge); the ID is shown on chrome://extensions
-powershell -ExecutionPolicy Bypass -File cli/install-local-bridge.ps1 -ExtensionId YOUR_EXTENSION_ID
-node "$env:LOCALAPPDATA\HoverPrompt\cli\imageprompt.mjs" local doctor
-```
-
-Затем включите **Настройки → Local CLI → Local cache bridge**. Все команды и инструкции для агента — в [docs/CLI-AGENT.md](docs/CLI-AGENT.md).
 
 ## Структура проекта
 

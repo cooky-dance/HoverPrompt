@@ -5,7 +5,8 @@
 <p align="center">
   <b>The all-in-one AI image prompt extension.</b><br>
   Reverse any image into a prompt · generate with your own API, ChatGPT or cloud credits ·<br>
-  custom skills · a searchable library · a prompt community — in one Chrome / Edge extension.
+  custom skills · a searchable library · a prompt community · a **CLI** that uses your account credits
+  and can drive the extension to auto-scan images and generate prompts — in one Chrome / Edge extension.
 </p>
 
 <p align="center">
@@ -36,8 +37,38 @@
 | 💬 **Community** | Share prompts and AI art, follow creators, generate from any shared prompt in one click |
 | 📚 **Library** | Every prompt and image, searchable in every language, with success rates and timings; export as a ZIP |
 | 🗂️ **Page collection & batch** | Collect a whole page of references (ads, icons and duplicates skipped), reverse a whole Xiaohongshu note, batch image-to-image |
-| ⌨️ **CLI & agents** | Read the library, scan pages and run pipelines from the command line or an AI agent |
+| ⌨️ **CLI & agents** | **Highlight:** connect to your HoverPrompt **account credits**, or control the extension to **auto-scan images and generate prompts**; also read the library and hand ready-made instructions to an AI agent |
 | 🔒 **Local first** | Works without an account; your API keys never leave your browser |
+
+
+> Built for **designers**, **creatives**, **product** teams and **AI film & video** makers.
+
+## CLI — account credits & extension control
+
+The Node.js CLI in [`extension/cli`](extension/cli) (`imageprompt.mjs`) is a first-class part of HoverPrompt:
+
+1. **Connect to your account quota** — `login` opens a device-approval page on [hoverprompt.com](https://hoverprompt.com); then `analyze` / `batch` use your **cloud credits** (server-enforced). `me` shows your quota.
+2. **Control the extension** — install the Native Messaging bridge (Windows / Chrome / Edge), enable **Settings → Local CLI**, and use `local search` / `local scan` + `local submit` so the extension **automatically recognizes page images and queues reverse prompts**.
+
+```powershell
+# from the extension/ folder; Extension ID is on chrome://extensions (or Settings → Local CLI)
+powershell -ExecutionPolicy Bypass -File cli/install-local-bridge.ps1 -ExtensionId YOUR_EXTENSION_ID
+$cli = Join-Path $env:LOCALAPPDATA 'HoverPrompt\cli\imageprompt.mjs'
+
+# Account credits (cloud API; works wherever Node can reach hoverprompt.com)
+node $cli login
+node $cli me
+node $cli analyze photo.jpg --wait true
+
+# Drive the extension: find images, then auto-generate prompts (uses the extension's configured channel)
+# Enable “Local cache bridge” and “Allow CLI to scan pages and submit tasks” in Settings → Local CLI
+node $cli local doctor
+node $cli local search --site pinterest.com --query "film portrait" --scope scroll
+node $cli local submit --scan-id SCAN_ID --limit 20
+node $cli local get TASK_ID
+```
+
+`local search` / `local scan` only collect image URLs (no model call). `local submit` may use your personal API or **cloud credits**, depending on the extension’s service mode. Token file: `~/.hoverprompt/credentials.json` (or `IMAGEPROMPT_TOKEN`). Full command list: [docs/CLI-AGENT.md](docs/CLI-AGENT.md).
 
 ## Highlights
 
@@ -100,21 +131,7 @@ With an account: cloud reverse prompts and generation with credits, the skill ma
 In local mode you bring your own model and image APIs (settings → **API sources** and **Generation**).
 
 - **This repository contains no API keys, tokens or secrets.** Never commit yours.
-- Keys you enter are stored only in your browser's extension storage (`chrome.storage.local`) and are sent only to the API endpoint you configured. They are not uploaded to HoverPrompt.
-- Local models (for example Ollama on `localhost`) work too and cost nothing.
-
-## Local CLI
-
-The `extension/cli` folder holds a small Node.js CLI and a Native Messaging bridge that read the extension's local cache:
-
-```powershell
-# from the extension folder, on Windows (Chrome / Edge); the ID is shown on chrome://extensions
-powershell -ExecutionPolicy Bypass -File cli/install-local-bridge.ps1 -ExtensionId YOUR_EXTENSION_ID
-node "$env:LOCALAPPDATA\HoverPrompt\cli\imageprompt.mjs" local doctor
-```
-
-Then turn on **Settings → Local CLI → Local cache bridge**. See [docs/CLI-AGENT.md](docs/CLI-AGENT.md) for every command and the agent instructions.
-
+- Keys you enter are stored on
 ## Project layout
 
 ```

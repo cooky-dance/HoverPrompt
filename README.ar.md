@@ -7,7 +7,7 @@
 <p align="center">
   <b>إضافة موجّهات صور الذكاء الاصطناعي الشاملة.</b><br>
   اعكس أي صورة إلى موجّه · أنشئ بواجهة API الخاصة بك أو ChatGPT أو الأرصدة السحابية ·<br>
-  مهارات مخصّصة · مكتبة قابلة للبحث · مجتمع الموجّهات — في إضافة Chrome / Edge واحدة.
+  مهارات مخصّصة · مكتبة قابلة للبحث · مجتمع الموجّهات · **CLI** (الاتصال برصيد الحساب والتحكم بالإضافة للتعرّف التلقائي على الصور وتوليد الموجّهات) — في إضافة Chrome / Edge واحدة.
 </p>
 
 <p align="center">
@@ -38,8 +38,34 @@
 | 💬 **المجتمع** | شارك الموجّهات وأعمال الذكاء الاصطناعي، وتابع المبدعين، وأنشئ من أي موجّه مشترك بنقرة واحدة |
 | 📚 **المكتبة** | كل موجّه وصورة، قابلة للبحث بأي لغة، مع نسب النجاح والأوقات؛ صدّر كـ ZIP |
 | 🗂️ **جمع الصفحة والدُفعات** | اجمع مراجع الصفحة كاملة (مع تخطّي الإعلانات والأيقونات والمكررات)، واعكس ملاحظة Xiaohongshu كاملة، وصورة إلى صورة بالدفعة |
-| ⌨️ **CLI والوكلاء** | اقرأ المكتبة وامسح الصفحات وشغّل المسارات من سطر الأوامر أو وكيل ذكاء اصطناعي |
+| ⌨️ **CLI والوكلاء** | **أبرزها:** الاتصال بـ**رصيد حساب** HoverPrompt، أو التحكم بالإضافة لـ**التعرّف التلقائي على الصور وتوليد الموجّهات**؛ مع قراءة المكتبة وتعليمات للوكيل |
 | 🔒 **محلي أولًا** | يعمل دون حساب؛ مفاتيح API لا تغادر متصفحك |
+
+
+> مبني لـ**المصمّمين** و**المبدعين** وفرق **المنتج** وصنّاع **الأفلام والفيديو بالذكاء الاصطناعي**.
+
+## CLI — رصيد الحساب والتحكم بالإضافة
+
+واجهة Node.js في [`extension/cli`](extension/cli) (`imageprompt.mjs`) جزء أساسي من HoverPrompt:
+
+1. **رصيد الحساب** — `login` يفتح موافقة الجهاز على [hoverprompt.com](https://hoverprompt.com)؛ ثم `analyze` / `batch` يستهلكان **أرصدة السحابة**. `me` يعرض الحصة.
+2. **التحكم بالإضافة** — ثبّت جسر Native Messaging (Windows / Chrome / Edge)، فعّل **الإعدادات → Local CLI**، واستخدم `local search` / `local scan` + `local submit` لجعل الإضافة **تتعرّف تلقائياً على صور الصفحة وتضع مهام عكس الموجّه في الطابور**.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File cli/install-local-bridge.ps1 -ExtensionId YOUR_EXTENSION_ID
+$cli = Join-Path $env:LOCALAPPDATA 'HoverPrompt\cli\imageprompt.mjs'
+
+node $cli login
+node $cli me
+node $cli analyze photo.jpg --wait true
+
+node $cli local doctor
+node $cli local search --site pinterest.com --query "film portrait" --scope scroll
+node $cli local submit --scan-id SCAN_ID --limit 20
+node $cli local get TASK_ID
+```
+
+`local search` / `local scan` يجمعان عناوين الصور فقط (بدون استدعاء نموذج). `local submit` قد يستخدم واجهتك الشخصية أو **أرصدة السحابة** حسب وضع الإضافة. الرمز: `~/.hoverprompt/credentials.json` (أو `IMAGEPROMPT_TOKEN`). القائمة الكاملة: [docs/CLI-AGENT.md](docs/CLI-AGENT.md).
 
 ## أبرز الميزات
 
@@ -105,21 +131,6 @@
 - تُخزَّن المفاتيح التي تدخلها فقط في تخزين الإضافة بالمتصفح (`chrome.storage.local`) وتُرسل فقط إلى نقطة نهاية API التي ضبطتها. لا تُرفع إلى HoverPrompt.
 - النماذج المحلية (مثل Ollama على `localhost`) تعمل أيضًا ودون تكلفة.
 
-## CLI المحلي
-
-يحوي مجلد `extension/cli` واجهة CLI صغيرة بـ Node.js وجسر Native Messaging يقرأان الذاكرة المؤقتة المحلية للإضافة:
-
-<div dir="ltr">
-
-```powershell
-# from the extension folder, on Windows (Chrome / Edge); the ID is shown on chrome://extensions
-powershell -ExecutionPolicy Bypass -File cli/install-local-bridge.ps1 -ExtensionId YOUR_EXTENSION_ID
-node "$env:LOCALAPPDATA\HoverPrompt\cli\imageprompt.mjs" local doctor
-```
-
-</div>
-
-ثم فعّل **الإعدادات → Local CLI → Local cache bridge**. راجع [docs/CLI-AGENT.md](docs/CLI-AGENT.md) لكل أمر وتعليمات الوكيل.
 
 ## تخطيط المشروع
 

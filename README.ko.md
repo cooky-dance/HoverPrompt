@@ -5,7 +5,7 @@
 <p align="center">
   <b>올인원 AI 이미지 프롬프트 확장 프로그램.</b><br>
   어떤 이미지도 프롬프트로 반전 · 내 API, ChatGPT 또는 클라우드 크레딧으로 생성 ·<br>
-  맞춤 스킬 · 검색 가능한 라이브러리 · 프롬프트 커뮤니티 — Chrome / Edge 확장 하나에.
+  맞춤 스킬 · 검색 가능한 라이브러리 · 프롬프트 커뮤니티 · **CLI**(계정 한도에 연결하고, 확장을 제어해 이미지를 자동 인식·프롬프트 생성) — Chrome / Edge 확장 하나에.
 </p>
 
 <p align="center">
@@ -36,8 +36,34 @@
 | 💬 **커뮤니티** | 프롬프트와 AI 작품 공유, 크리에이터 팔로우, 공유된 프롬프트로 원클릭 생성 |
 | 📚 **라이브러리** | 모든 프롬프트와 이미지를 모든 언어로 검색, 성공률과 소요 시간 포함; ZIP으로 내보내기 |
 | 🗂️ **페이지 수집과 일괄** | 페이지 전체 참조 이미지 수집(광고·아이콘·중복 건너뜀), Xiaohongshu 노트 전체 반전, 일괄 이미지→이미지 |
-| ⌨️ **CLI와 에이전트** | 명령줄이나 AI 에이전트에서 라이브러리 읽기, 페이지 스캔, 파이프라인 실행 |
+| ⌨️ **CLI와 에이전트** | **강조:** HoverPrompt **계정 크레딧**에 연결하거나, 확장을 제어해 **이미지를 자동 인식하고 프롬프트를 생성**; 라이브러리 읽기와 에이전트 지시문도 가능 |
 | 🔒 **로컬 우선** | 계정 없이 동작; API 키는 브라우저 밖으로 나가지 않습니다 |
+
+
+> **디자인**·**크리에이티브**·**제품**·**AI 영상(영상 제작)** 창작자를 위해 만들었습니다.
+
+## CLI — 계정 한도와 확장 제어
+
+[`extension/cli`](extension/cli)의 Node.js CLI(`imageprompt.mjs`)는 HoverPrompt의 핵심 기능입니다:
+
+1. **계정 한도 연결** — `login`으로 [hoverprompt.com](https://hoverprompt.com) 기기 승인; 이후 `analyze` / `batch`는 **클라우드 크레딧**을 사용합니다. `me`로 한도 확인.
+2. **확장 제어** — Native Messaging 브리지 설치(Windows / Chrome / Edge), **설정 → Local CLI** 켜기, `local search` / `local scan` + `local submit`로 **페이지 이미지를 자동 인식하고 역프롬프트 작업을 넣기**.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File cli/install-local-bridge.ps1 -ExtensionId YOUR_EXTENSION_ID
+$cli = Join-Path $env:LOCALAPPDATA 'HoverPrompt\cli\imageprompt.mjs'
+
+node $cli login
+node $cli me
+node $cli analyze photo.jpg --wait true
+
+node $cli local doctor
+node $cli local search --site pinterest.com --query "film portrait" --scope scroll
+node $cli local submit --scan-id SCAN_ID --limit 20
+node $cli local get TASK_ID
+```
+
+`local search` / `local scan`은 이미지 URL만 수집합니다(모델 호출 없음). `local submit`은 확장 설정에 따라 개인 API 또는 **클라우드 크레딧**을 씁니다. 토큰: `~/.hoverprompt/credentials.json`(또는 `IMAGEPROMPT_TOKEN`). 전체 명령: [docs/CLI-AGENT.md](docs/CLI-AGENT.md).
 
 ## 하이라이트
 
@@ -103,17 +129,6 @@ Chrome 또는 Edge 111 이상이 필요합니다. 빌드 단계 없음: 확장�
 - 입력한 키는 브라우저의 확장 저장소(`chrome.storage.local`)에만 저장되며, 설정한 API 엔드포인트로만 전송됩니다. HoverPrompt에는 업로드되지 않습니다.
 - 로컬 모델(예: `localhost`의 Ollama)도 동작하며 비용이 없습니다.
 
-## 로컬 CLI
-
-`extension/cli` 폴더에는 확장의 로컬 캐시를 읽는 작은 Node.js CLI와 Native Messaging 브리지가 있습니다:
-
-```powershell
-# from the extension folder, on Windows (Chrome / Edge); the ID is shown on chrome://extensions
-powershell -ExecutionPolicy Bypass -File cli/install-local-bridge.ps1 -ExtensionId YOUR_EXTENSION_ID
-node "$env:LOCALAPPDATA\HoverPrompt\cli\imageprompt.mjs" local doctor
-```
-
-그런 다음 **설정 → Local CLI → Local cache bridge**를 켭니다. 모든 명령과 에이전트 안내는 [docs/CLI-AGENT.md](docs/CLI-AGENT.md)를 보세요.
 
 ## 프로젝트 구성
 

@@ -5,7 +5,7 @@
 <p align="center">
   <b>ऑल-इन-वन AI इमेज प्रॉम्प्ट एक्सटेंशन.</b><br>
   किसी भी इमेज को प्रॉम्प्ट में रिवर्स करें · अपने API, ChatGPT या क्लाउड क्रेडिट से जनरेट करें ·<br>
-  कस्टम स्किल · खोजने योग्य लाइब्रेरी · प्रॉम्प्ट कम्युनिटी — एक ही Chrome / Edge एक्सटेंशन में.
+  कस्टम स्किल · खोजने योग्य लाइब्रेरी · प्रॉम्प्ट कम्युनिटी · **CLI** (अकाउंट कोटा से जुड़ें और एक्सटेंशन नियंत्रित कर इमेज स्वतः पहचान/प्रॉम्प्ट बनाएँ) — एक ही Chrome / Edge एक्सटेंशन में.
 </p>
 
 <p align="center">
@@ -36,8 +36,34 @@
 | 💬 **कम्युनिटी** | प्रॉम्प्ट और AI आर्ट शेयर करें, क्रिएटर्स को फ़ॉलो करें, किसी भी शेयर किए गए प्रॉम्प्ट से एक क्लिक में जनरेट करें |
 | 📚 **लाइब्रेरी** | हर प्रॉम्प्ट और इमेज, हर भाषा में खोजने योग्य, सफलता दर और समय के साथ; ZIP में एक्सपोर्ट |
 | 🗂️ **पेज कलेक्शन और बैच** | पूरे पेज के रेफ़रेंस इकट्ठा करें (विज्ञापन, आइकन और डुप्लिकेट छोड़ दिए जाते हैं), पूरी Xiaohongshu नोट रिवर्स करें, बैच इमेज-से-इमेज |
-| ⌨️ **CLI और एजेंट** | कमांड लाइन या AI एजेंट से लाइब्रेरी पढ़ें, पेज स्कैन करें और पाइपलाइन चलाएँ |
+| ⌨️ **CLI और एजेंट** | **मुख्य:** HoverPrompt **अकाउंट क्रेडिट** से जुड़ें, या एक्सटेंशन नियंत्रित कर **इमेज स्वतः पहचानें और प्रॉम्प्ट बनाएँ**; लाइब्रेरी पढ़ना और एजेंट निर्देश भी |
 | 🔒 **लोकल-फ़र्स्ट** | बिना अकाउंट के काम करता है; आपकी API की ब्राउज़र से बाहर नहीं जाती |
+
+
+> **डिज़ाइनर**, **क्रिएटिव**, **प्रोडक्ट** टीम और **AI फ़िल्म व वीडियो** निर्माताओं के लिए बनाया गया.
+
+## CLI — अकाउंट क्रेडिट और एक्सटेंशन नियंत्रण
+
+[`extension/cli`](extension/cli) में Node.js CLI (`imageprompt.mjs`) HoverPrompt की मुख्य क्षमता है:
+
+1. **अकाउंट कोटा** — `login` [hoverprompt.com](https://hoverprompt.com) पर डिवाइस अनुमोदन खोलता है; फिर `analyze` / `batch` आपके **क्लाउड क्रेडिट** इस्तेमाल करते हैं। `me` से कोटा देखें।
+2. **एक्सटेंशन नियंत्रण** — Native Messaging ब्रिज लगाएँ (Windows / Chrome / Edge), **Settings → Local CLI** चालू करें, और `local search` / `local scan` + `local submit` से एक्सटेंशन **पेज की इमेज स्वतः पहचानकर रिवर्स-प्रॉम्प्ट कतार में डाले**.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File cli/install-local-bridge.ps1 -ExtensionId YOUR_EXTENSION_ID
+$cli = Join-Path $env:LOCALAPPDATA 'HoverPrompt\cli\imageprompt.mjs'
+
+node $cli login
+node $cli me
+node $cli analyze photo.jpg --wait true
+
+node $cli local doctor
+node $cli local search --site pinterest.com --query "film portrait" --scope scroll
+node $cli local submit --scan-id SCAN_ID --limit 20
+node $cli local get TASK_ID
+```
+
+`local search` / `local scan` सिर्फ इमेज URL इकट्ठा करते हैं (मॉडल कॉल नहीं)। `local submit` एक्सटेंशन की सेटिंग के हिसाब से पर्सनल API या **क्लाउड क्रेडिट** ले सकता है। टोकन: `~/.hoverprompt/credentials.json` (या `IMAGEPROMPT_TOKEN`)। पूरी सूची: [docs/CLI-AGENT.md](docs/CLI-AGENT.md)।
 
 ## हाइलाइट्स
 
@@ -103,17 +129,6 @@ Chrome या Edge 111 या बाद का चाहिए. कोई बि
 - आपके दर्ज की गई की सिर्फ़ ब्राउज़र के एक्सटेंशन स्टोरेज (`chrome.storage.local`) में रहती हैं और सिर्फ़ आपके कॉन्फ़िगर किए गए API एंडपॉइंट पर भेजी जाती हैं. वे HoverPrompt पर अपलोड नहीं होतीं.
 - लोकल मॉडल (जैसे `localhost` पर Ollama) भी काम करते हैं और मुफ़्त हैं.
 
-## लोकल CLI
-
-`extension/cli` फ़ोल्डर में एक छोटा Node.js CLI और Native Messaging ब्रिज है जो एक्सटेंशन का लोकल कैश पढ़ते हैं:
-
-```powershell
-# from the extension folder, on Windows (Chrome / Edge); the ID is shown on chrome://extensions
-powershell -ExecutionPolicy Bypass -File cli/install-local-bridge.ps1 -ExtensionId YOUR_EXTENSION_ID
-node "$env:LOCALAPPDATA\HoverPrompt\cli\imageprompt.mjs" local doctor
-```
-
-फिर **सेटिंग्स → Local CLI → Local cache bridge** चालू करें. हर कमांड और एजेंट निर्देश [docs/CLI-AGENT.md](docs/CLI-AGENT.md) में हैं.
 
 ## प्रोजेक्ट लेआउट
 

@@ -5,7 +5,7 @@
 <p align="center">
   <b>オールインワンの AI 画像プロンプト拡張機能。</b><br>
   どんな画像もプロンプトに反転 · 自分の API、ChatGPT、クラウドクレジットで生成 ·<br>
-  カスタムスキル · 検索できるライブラリ · プロンプトコミュニティ — すべて 1 つの Chrome / Edge 拡張に。
+  カスタムスキル · 検索できるライブラリ · プロンプトコミュニティ · **CLI**（アカウント枠に接続し、拡張を制御して画像を自動認識・プロンプト生成）— すべて 1 つの Chrome / Edge 拡張に。
 </p>
 
 <p align="center">
@@ -36,8 +36,34 @@
 | 💬 **コミュニティ** | プロンプトと AI 作品を共有、クリエイターをフォロー、共有されたプロンプトからワンクリックで生成 |
 | 📚 **ライブラリ** | すべてのプロンプトと画像を全言語で検索、成功率と所要時間付き；ZIP でエクスポート |
 | 🗂️ **ページ収集と一括** | ページ全体の参照画像を収集（広告・アイコン・重複はスキップ）、Xiaohongshu ノート全体を反転、一括の画像から画像 |
-| ⌨️ **CLI とエージェント** | コマンドラインや AI エージェントからライブラリの読み取り、ページのスキャン、パイプラインの実行 |
+| ⌨️ **CLI とエージェント** | **注目:** HoverPrompt の**アカウント枠（クレジット）**に接続、または拡張を制御して**画像を自動認識しプロンプトを生成**；ライブラリ読み取りやエージェント向け指示も可 |
 | 🔒 **ローカル優先** | アカウントなしで動作；API キーはブラウザの外に出ません |
+
+
+> **デザイン**、**クリエイティブ**、**プロダクト**、**AI 映像 / 映像制作**向けに作られています。
+
+## CLI — アカウント枠と拡張の制御
+
+[`extension/cli`](extension/cli) の Node.js CLI（`imageprompt.mjs`）は本体機能のひとつです：
+
+1. **アカウント枠に接続** — `login` で [hoverprompt.com](https://hoverprompt.com) のデバイス承認；その後 `analyze` / `batch` は**クラウドクレジット**を消費します。`me` で枠を確認。
+2. **拡張を制御** — Native Messaging ブリッジを入れ（Windows / Chrome / Edge）、**設定 → Local CLI** を有効化し、`local search` / `local scan` + `local submit` で**ページ上の画像を自動認識して反転プロンプトを投入**。
+
+```powershell
+powershell -ExecutionPolicy Bypass -File cli/install-local-bridge.ps1 -ExtensionId YOUR_EXTENSION_ID
+$cli = Join-Path $env:LOCALAPPDATA 'HoverPrompt\cli\imageprompt.mjs'
+
+node $cli login
+node $cli me
+node $cli analyze photo.jpg --wait true
+
+node $cli local doctor
+node $cli local search --site pinterest.com --query "film portrait" --scope scroll
+node $cli local submit --scan-id SCAN_ID --limit 20
+node $cli local get TASK_ID
+```
+
+`local search` / `local scan` は画像 URL の収集のみ（モデル呼び出しなし）。`local submit` は拡張の設定に応じて個人 API または**クラウドクレジット**を使います。トークン: `~/.hoverprompt/credentials.json`（または `IMAGEPROMPT_TOKEN`）。詳細は [docs/CLI-AGENT.md](docs/CLI-AGENT.md)。
 
 ## ハイライト
 
@@ -103,17 +129,6 @@ Chrome または Edge 111 以降が必要です。ビルド不要：拡張はプ
 - 入力したキーはブラウザの拡張ストレージ（`chrome.storage.local`）にだけ保存され、設定した API エンドポイントにだけ送られます。HoverPrompt にはアップロードされません。
 - ローカルモデル（例：`localhost` の Ollama）も使え、費用はかかりません。
 
-## ローカル CLI
-
-`extension/cli` フォルダには、拡張のローカルキャッシュを読む小さな Node.js CLI と Native Messaging ブリッジがあります：
-
-```powershell
-# from the extension folder, on Windows (Chrome / Edge); the ID is shown on chrome://extensions
-powershell -ExecutionPolicy Bypass -File cli/install-local-bridge.ps1 -ExtensionId YOUR_EXTENSION_ID
-node "$env:LOCALAPPDATA\HoverPrompt\cli\imageprompt.mjs" local doctor
-```
-
-その後 **設定 → Local CLI → Local cache bridge** をオンにします。すべてのコマンドとエージェント指示は [docs/CLI-AGENT.md](docs/CLI-AGENT.md) を参照。
 
 ## プロジェクト構成
 
