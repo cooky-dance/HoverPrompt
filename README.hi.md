@@ -22,8 +22,9 @@
   <a href="README.ar.md">العربية</a>
 </p>
 
-<p align="center"><b>🆓 मुफ़्त उपयोग</b> — एक्सटेंशन मुफ़्त; लोकल / अपना API बिना खाते।<br>
-वैकल्पिक क्लाउड: Free पर महीने <b>10</b> रिवर्स + इंस्टॉल उपहार <b>20</b> क्रेडिट; Plus और पैक वैकल्पिक।</p>
+<p align="center"><b>🆓 मुफ़्त उपयोग</b> — एक्सटेंशन मुफ़्त; अपनी API कुंजी या लोकल Ollama दर्ज करें (खाता ज़रूरी नहीं)।<br>
+समर्थित: OpenAI Chat/Responses, Anthropic, Gemini, Ollama; इमेज जन: OpenAI-संगत, ModelScope, Gemini/Imagen, Seedream. कुंजियाँ केवल इस डिवाइस के ब्राउज़र <code>chrome.storage.local</code> में — सिंक/अपलोड नहीं。<br>
+वैकल्पिक क्लाउड: Free पर महीने <b>10</b> + इंस्टॉल उपहार <b>20</b> क्रेडिट; Plus/पैक वैकल्पिक।</p>
 
 
 ---

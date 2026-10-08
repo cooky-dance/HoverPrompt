@@ -22,7 +22,8 @@
   <a href="README.ar.md">العربية</a>
 </p>
 
-<p align="center"><b>🆓 免费使用</b> — 插件本体免费；本地 / 自备 API 无需账号。<br>
+<p align="center"><b>🆓 免费使用</b> — 插件本体免费；可自定义 AI 模型来源，只需填写自己的 API Key（或本机 Ollama），无需账号。<br>
+支持 OpenAI Chat/Responses、Anthropic、Gemini、Ollama；生图另支持 OpenAI 兼容、魔搭 ModelScope、Gemini/Imagen、火山方舟 Seedream。密钥只保存在本机浏览器 <code>chrome.storage.local</code>，不同步、不上传。<br>
 可选云端：免费版每月 <b>10</b> 次反推，另有安装赠送 <b>20</b> 积分；Plus 与积分包为可选项。</p>
 
 

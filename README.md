@@ -23,7 +23,8 @@
   <a href="README.ar.md">العربية</a>
 </p>
 
-<p align="center"><b>🆓 Free to use</b> — the extension is free; local / your own API needs no account.<br>
+<p align="center"><b>🆓 Free to use</b> — the extension is free; bring your own API key or run Ollama locally, no account needed.<br>
+Custom AI providers supported (OpenAI Chat/Responses, Anthropic, Gemini, Ollama; image gen: OpenAI-compatible, ModelScope, Gemini/Imagen, Seedream). Keys stay in <code>chrome.storage.local</code> on this device only — never synced or uploaded.<br>
 Optional cloud: <b>10</b> reverse prompts / month on Free, plus a <b>20</b>-credit install gift; Plus and credit packs are optional.</p>
 
 

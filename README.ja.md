@@ -22,8 +22,9 @@
   <a href="README.ar.md">العربية</a>
 </p>
 
-<p align="center"><b>🆓 無料で使える</b> — 拡張本体は無料。ローカル / 自分の API はアカウント不要。<br>
-任意のクラウド：無料プランは月 <b>10</b> 回の反転、インストール特典 <b>20</b> クレジット。Plus とパックは任意。</p>
+<p align="center"><b>🆓 無料で使える</b> — 拡張本体は無料。自分の API キーまたは本機 Ollama を設定するだけ（アカウント不要）。<br>
+対応: OpenAI Chat/Responses、Anthropic、Gemini、Ollama；画像生成は OpenAI 互換、ModelScope、Gemini/Imagen、Seedream。キーは端末のブラウザ <code>chrome.storage.local</code> のみ（同期・アップロードなし）。<br>
+任意のクラウド：無料プランは月 <b>10</b> 回 + インストール特典 <b>20</b> クレジット。Plus / パックは任意。</p>
 
 
 ---
