@@ -92,7 +92,7 @@ globalThis.CreditsPanel=(()=>{
    if(q.trial)text.append(el('span','cp-trial',T('Plus 体验至 / Plus trial until')+' '+date(q.trial.endsAt)));
    pro.append(text);
    // the 7-day Plus trial, claimed here once (per account, device, browser and network)
-   if(account.trialOffer){const t=el('button','cp-secondary',T('免费试用 7 天 / Try free for 7 days'));t.type='button';t.title=T('含 '+account.trialOffer.credits+' 积分，无需绑卡 / '+account.trialOffer.credits+' credits, no card');
+   if(account.trialOffer){const t=el('button','cp-secondary',T('免费试用 '+account.trialOffer.days+' 天 / Try free for '+account.trialOffer.days+' days'));t.type='button';t.title=T('含 '+account.trialOffer.credits+' 积分，无需绑卡 / '+account.trialOffer.credits+' credits, no card');
     t.onclick=async()=>{t.disabled=true;try{await Cloud.claimTrial();status(T('Plus 体验已开通 / Plus trial started'));render();}catch(error){status(error.message);t.disabled=false;}};pro.append(t);}
    pro.append(up);dialog.append(pro);
   }else dialog.append(el('p','cp-hint',T('Plus 有效期至 / Plus until')+' '+(q.expiresAt?new Date(q.expiresAt).toLocaleDateString():'—')));
