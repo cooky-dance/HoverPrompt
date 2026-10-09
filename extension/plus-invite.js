@@ -2,18 +2,23 @@
    the same design as the website's (hoverprompt.com public/plus-invite.js).
    - Not signed in: "Sign up & claim" starts the usual sign-in (Cloud.login: the website page, email code with the human
      check or a social account, then "approve"); while it waits the card shows the code.
-   - Signed in and the account can still claim (/api/me trialOffer): "Claim free Plus" claims it (Cloud.claimTrial, the
-     same call as the credits window), then a short success state.
+   - Signed in and the account can still claim (/api/me trialOffer): "Claim free Plus" claims it (PlusTrial.claim:
+     Cloud.claimTrial with a spinner, the same call as the credits window), then the card closes and the success window
+     opens (plus-trial.js).
    - Trial used, a Plus member, or the trial switched off on the server: never shown.
    Days and credits come from the server: the account's trialOffer, or the public price list (/api/pricing "trial") when
-   signed out. Closing it hides it for 3 days (chrome.storage.local plusInvite); after a claim, or once an account here
-   has no offer, it is not shown again. Respects reduced motion. */
+   signed out. Shown at most once every 24 hours in this profile (chrome.storage.local plusInvite: lastShown, shows); from
+   the third showing on, "Not now" becomes "Don't remind me", which hides it for good. After a claim, or once an account
+   here has no offer, it is not shown again. Respects reduced motion. */
 globalThis.PlusInvite=(()=>{
  const T=value=>typeof LanguageUI!=='undefined'?LanguageUI.text(value):splitBilingual(value)[0];
- const KEY='plusInvite',SNOOZE=3*86400000,DAY=86400000;
- let saved={},loaded=false,known=false,state='',card=null,trial=null,pricingTrial,pricingLoad=null,timer=null,doneTimer=null,claimedUntil=null,busy=false;
+ const KEY='plusInvite',GAP=86400000,NEVER_FROM=3;
+ let saved={},loaded=false,known=false,state='',card=null,trial=null,pricingTrial,pricingLoad=null,timer=null,busy=false,nth=0;
  const el=(tag,cls,text)=>{const node=document.createElement(tag);if(cls)node.className=cls;if(text!=null)node.textContent=text;return node;};
- const muted=()=>!!saved.done||(Number(saved.closedAt)>0&&Date.now()-Number(saved.closedAt)<SNOOZE);
+ // closedAt: what 3.10.8 stored when it was closed (one showing)
+ const lastSeen=()=>Math.max(Number(saved.lastShown)||0,Number(saved.closedAt)||0);
+ const shows=()=>Number(saved.shows)||(Number(saved.closedAt)>0?1:0);
+ const muted=()=>!!saved.done||!!saved.never||(lastSeen()>0&&Date.now()-lastSeen()<GAP);
  const remember=async patch=>{saved={...saved,...patch};try{await chrome.storage.local.set({[KEY]:saved});}catch{}};
  const valid=v=>v&&Number(v.days)>0&&Number(v.credits)>0?{days:Number(v.days),credits:Number(v.credits)}:null;
  const publicTrial=()=>pricingLoad||=Cloud.pricing().then(p=>{pricingTrial=valid(p?.trial);return pricingTrial;}).catch(()=>{pricingLoad=null;return null;});
@@ -27,7 +32,8 @@ globalThis.PlusInvite=(()=>{
    next=valid(account.trialOffer);view='claim';
   }else{next=await publicTrial();view=Cloud.loginState?.()?'wait':'join';}
   if(state==='done'||busy)return;
-  if(!next||muted()){hide(false);return;}
+  // the card already on screen stays (e.g. signing in from it)
+  if(!next||saved.done||saved.never||(!card&&muted())){hide(false);return;}
   trial=next;
   if(card){state=view;paint();return;}
   state=view;timer=setTimeout(()=>{if(state===view&&!muted())show();},900);
@@ -42,13 +48,11 @@ globalThis.PlusInvite=(()=>{
   const perks=el('div','pi-perks');for(const kind of ['days','credits']){const perk=el('span','pi-perk');perk.dataset.kind=kind;perk.append(el('b'),el('small'));perks.append(perk);}
   const code=el('div','pi-code');code.append(el('span'),el('b'));
   const error=el('p','pi-error');error.setAttribute('role','alert');error.hidden=true;
-  const actions=el('div','pi-actions');const cta=el('button','pi-cta');cta.type='button';cta.append(el('span','pi-cta-text'));cta.onclick=act;
+  const actions=el('div','pi-actions');const cta=el('button','pi-cta');cta.type='button';cta.dataset.hoverSound='shine';cta.append(el('span','pi-cta-text'));cta.onclick=act;
   const later=el('button','pi-later');later.type='button';later.onclick=notNow;actions.append(cta,later);
   body.append(badge,title,el('p','pi-text'),perks,code,error,actions);
-  const done=el('div','pi-done');done.setAttribute('aria-live','polite');done.innerHTML='<span class="pi-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>';
-  const ok=el('button','pi-cta pi-ok');ok.type='button';ok.append(el('span','pi-cta-text'));ok.onclick=()=>hide(true);done.append(el('p','pi-done-title'),el('p','pi-done-text'),ok);
-  card.append(stars,close,body,done);
-  card.addEventListener('keydown',event=>{if(event.key==='Escape'){event.stopPropagation();state==='done'?hide(true):dismiss();}});
+  card.append(stars,close,body);
+  card.addEventListener('keydown',event=>{if(event.key==='Escape'){event.stopPropagation();dismiss();}});
   document.body.append(card);
  }
  function paint(){
@@ -61,38 +65,36 @@ globalThis.PlusInvite=(()=>{
   for(const perk of card.querySelectorAll('.pi-perk')){const days=perk.dataset.kind==='days';perk.querySelector('b').textContent=days?d:n;perk.querySelector('small').textContent=T(days?'天 Plus 会员 / days of Plus':'云端积分 / cloud credits');}
   const wait=Cloud.loginState?.();const code=card.querySelector('.pi-code');code.hidden=!(state==='wait'&&wait);
   if(wait){code.querySelector('span').textContent=T('验证码 / Code');code.querySelector('b').textContent=wait.userCode.replace(/(.{4})(?=.)/g,'$1-');}
-  const cta=card.querySelector('.pi-actions .pi-cta');cta.setAttribute('aria-busy',String(busy));
+  const cta=card.querySelector('.pi-actions .pi-cta');if(state==='claim')cta.dataset.sound='claim';else delete cta.dataset.sound;
   cta.querySelector('.pi-cta-text').textContent=busy?T('领取中… / Claiming…'):state==='wait'?T('重新打开登录页 / Open the page again'):state==='join'?T('注册并领取 / Sign up & claim'):T('立即免费领取 / Claim free Plus');
-  set('.pi-later',state==='wait'?T('取消 / Cancel'):T('以后再说 / Not now'));
-  set('.pi-done-title',T('Plus 已开通 / Plus is on'));
-  const until=claimedUntil?new Date(claimedUntil).toLocaleDateString(document.documentElement.lang||undefined,{year:'numeric',month:'long',day:'numeric'}):'';
-  set('.pi-done-text',T('Plus 体验有效期至 {date}，积分已到账。 / Enjoy Plus until {date}. Your credits are ready.').replaceAll('{date}',until));
-  set('.pi-ok .pi-cta-text',T('好的 / Great'));
+  card.dataset.nth=String(nth);const never=nth>=NEVER_FROM&&state!=='wait';
+  set('.pi-later',state==='wait'?T('取消 / Cancel'):never?T('不再提醒 / Don’t remind me'):T('以后再说 / Not now'));card.querySelector('.pi-later').classList.toggle('pi-never',never);
  }
- function show(){if(!card)build();paint();if(reduced())card.classList.add('shown');else requestAnimationFrame(()=>requestAnimationFrame(()=>card?.classList.add('shown')));}
+ // each showing is counted and starts the 24 hours
+ function show(){nth=shows()+1;remember({lastShown:Date.now(),shows:nth});if(!card)build();paint();if(reduced())card.classList.add('shown');else requestAnimationFrame(()=>requestAnimationFrame(()=>card?.classList.add('shown')));}
  function hide(animate){
-  clearTimeout(timer);clearTimeout(doneTimer);if(!busy)state='';
+  clearTimeout(timer);if(!busy)state='';
   const node=card;card=null;if(!node)return;
   if(!animate||reduced()){node.remove();return;}
   node.classList.remove('shown');node.classList.add('leaving');setTimeout(()=>node.remove(),260);
  }
- function dismiss(){if(state==='wait')Cloud.cancelLogin?.();remember({closedAt:Date.now()});state='';hide(true);}
+ // closed (×, Esc, "Not now"): back in 24 hours; "Don't remind me" (from the third showing): never again
+ function dismiss(){if(state==='wait')Cloud.cancelLogin?.();state='';hide(true);}
  // "not now" while the sign-in waits: stop waiting and go back to the invite
- function notNow(){if(state==='wait'){Cloud.cancelLogin?.();state='join';paint();return;}dismiss();}
+ function notNow(){if(state==='wait'){Cloud.cancelLogin?.();state='join';paint();return;}if(nth>=NEVER_FROM)remember({never:true});dismiss();}
  async function act(){
   const error=card?.querySelector('.pi-error');if(!error||busy)return;error.hidden=true;
   if(state==='join'){try{const started=Cloud.login();state='wait';paint();await started;}catch(e){if(card){state='join';paint();error.textContent=e.message;error.hidden=false;}}return;}
   if(state==='wait'){Cloud.reopenLogin?.();return;}
   if(state!=='claim')return;
-  busy=true;paint();
+  busy=true;paint();const offer=trial;
   try{
-   const quota=await Cloud.claimTrial();
-   claimedUntil=quota?.trial?.endsAt||Date.now()+trial.days*DAY;await remember({done:true});busy=false;
-   if(card){state='done';paint();card.querySelector('.pi-ok')?.focus({preventScroll:true});doneTimer=setTimeout(()=>hide(true),7000);}else state='';
+   const quota=await PlusTrial.claim(card.querySelector('.pi-actions .pi-cta'));
+   await remember({done:true});busy=false;state='';hide(true);PlusTrial.success(quota,offer);
   }catch(e){
    busy=false;if(['trial_taken','trial_used','trial_member','trial_unavailable'].includes(e.code))await remember({done:true});
    if(!card){state='';return;}
-   state='claim';paint();error.textContent=e.code==='trial_taken'?T('这台设备、浏览器或网络已经领取过 Plus 体验。 / This device, browser or network has already claimed a Plus trial.'):T('领取失败： / Could not claim it: ')+e.message;error.hidden=false;
+   state='claim';paint();error.textContent=e.friendly||e.message;error.hidden=false;
   }
  }
  async function init(){

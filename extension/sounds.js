@@ -2,8 +2,12 @@
 // with WebAudio — no audio files are loaded. On by default; turned off in Settings (site: localStorage
 // "imageprompt-sounds" = "off"; extension: chrome.storage.local uiSounds = false, mirrored into localStorage).
 //  - tap: a button, link, tab or menu item is clicked; toggle: a checkbox or switch; notice: a status message appears
-//  - HPSound.play('success' | 'error' | …) for code that knows the outcome
+//  - HPSound.play('success' | 'error' | …) for code that knows the outcome; a button can name its own click sound
+//    (data-sound="claim": a bright two-note chime), and 'celebrate' is a short rising sparkle after a good result
 // Quiet (≈ −24 dB), at most one sound per 70 ms, never for synthetic clicks, never before the first user gesture.
+//  - shine: a faint, bright sparkle when a mouse moves onto an element marked data-hover-sound (the Plus cards, the
+//    packs, the trial buttons): once per entry, at most one every 250 ms, quieter than the clicks, never for touch or a
+//    pen, and only once the page has had a user gesture (hovering cannot unlock audio, so no AudioContext is made before).
 (()=>{
  if(globalThis.HPSound)return;
  const KEY='imageprompt-sounds';
@@ -24,7 +28,10 @@
   success:c=>{note(c,660,660,.09,'triangle',.05);note(c,990,990,.16,'triangle',.05,.08);},
   error:c=>{note(c,240,170,.16,'triangle',.06);note(c,180,140,.14,'triangle',.05,.1);},
   open:c=>note(c,520,780,.07,'sine',.04),
-  close:c=>note(c,780,520,.07,'sine',.035)
+  close:c=>note(c,780,520,.07,'sine',.035),
+  claim:c=>{note(c,784,1175,.09,'sine',.05);note(c,1175,1568,.16,'triangle',.04,.07);},
+  shine:c=>{note(c,2093,2349,.07,'sine',.016);note(c,2794,3136,.08,'sine',.014,.035);note(c,3520,3951,.14,'sine',.012,.07);},
+  celebrate:c=>{note(c,1047,1047,.1,'triangle',.04);note(c,1319,1319,.1,'triangle',.038,.07);note(c,1568,1568,.12,'triangle',.036,.14);note(c,2093,2093,.24,'sine',.032,.21);}
  };
  function play(name){
   if(!enabled||!SOUNDS[name])return;const now=performance.now();if(now-last<70)return;last=now;
@@ -33,13 +40,29 @@
  function set(on,save=true){enabled=!!on;try{localStorage.setItem(KEY,on?'on':'off');}catch{}
   if(save){try{if(typeof chrome!=='undefined'&&chrome.storage?.local)chrome.storage.local.set({uiSounds:!!on});}catch{}}
   if(on)play('toggle');}
- globalThis.HPSound={play,set,get enabled(){return enabled;}};
+ // a user gesture has happened on this page (the browser's own record when it has one)
+ let gestured=false;
+ const activated=()=>navigator.userActivation?navigator.userActivation.hasBeenActive:gestured;
+ for(const type of ['pointerdown','keydown'])document.addEventListener(type,event=>{if(event.isTrusted)gestured=true;},true);
+ let lastHover=0;
+ function hover(name='shine'){
+  if(!enabled||!SOUNDS[name]||!activated())return false;const now=performance.now();if(now-lastHover<250)return false;lastHover=now;
+  try{const c=audio();if(c)SOUNDS[name](c);}catch{}return true;
+ }
+ globalThis.HPSound={play,set,hover,get enabled(){return enabled;}};
  // clicks anywhere: what was clicked decides the sound (only real clicks)
  const TAP='button,a[href],[role=button],[role=tab],[role=menuitem],[role=option],[role=radio],summary,.swatch';
  document.addEventListener('click',event=>{
   if(!event.isTrusted)return;const t=event.target;if(!(t instanceof Element))return;
   const box=t.closest('input[type=checkbox],input[type=radio]');if(box){play(box.checked?'toggle':'untoggle');return;}
-  const hit=t.closest(TAP);if(hit&&!hit.disabled&&hit.getAttribute('aria-disabled')!=='true')play('tap');
+  const hit=t.closest(TAP);if(hit&&!hit.disabled&&hit.getAttribute('aria-disabled')!=='true')play(SOUNDS[hit.dataset?.sound]?hit.dataset.sound:'tap');
+ },true);
+ // a mouse moving onto a marked element (not between its own children): the hover sparkle
+ document.addEventListener('pointerover',event=>{
+  if(!event.isTrusted||event.pointerType!=='mouse'||!enabled)return;const t=event.target;if(!(t instanceof Element))return;
+  const hit=t.closest('[data-hover-sound]');if(!hit||hit.disabled||hit.getAttribute('aria-disabled')==='true')return;
+  if(event.relatedTarget instanceof Node&&hit.contains(event.relatedTarget))return;
+  hover(SOUNDS[hit.dataset.hoverSound]?hit.dataset.hoverSound:'shine');
  },true);
  document.addEventListener('change',event=>{if(event.isTrusted&&event.target instanceof HTMLSelectElement)play('tap');},true);
  // status messages: a soft chime when text appears in a live region

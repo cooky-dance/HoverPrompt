@@ -28,6 +28,8 @@ globalThis.CreditsPanel=(()=>{
   return box;
  }
  // pack sizes on sale (from the price list, else the account), smallest first
+ // what Plus gives: monthly credits and the number of synced images from /api/pricing (600 and 300 until it answers)
+ function proLine(){const p=pricing?.plans?.pro,n=Number(p?.monthlyLimit)||600,s=Number(p?.syncLimit)||300;return T('每月 '+n+' 次云端反推 · '+s+' 张图片云同步 / '+n+' analyses a month · '+s+' images synced to the cloud');}
  function sizes(kind,account){const list=Object.keys(pricing?.packs?.[kind]||account?.packs?.[kind]||{}).sort((a,b)=>a-b);return list.length?list:kind==='credits'?['250','600','2000']:['500','2000'];}
  // One pack button: size, unit, price and validity; clicking opens the payment page in a new tab.
  function pack(kind,size,account){
@@ -85,7 +87,7 @@ globalThis.CreditsPanel=(()=>{
   packs.append(creditHead,creditRow,syncHead,syncRow,agree);dialog.append(packs);
   // Plus
   if(plan!=='pro'){
-   const pro=el('div','cp-pro');const text=el('div');text.append(el('strong','','Plus'),el('span','',T('每月 600 次云端反推 · 云同步 300 条 · 1 GB 空间 / 600 analyses a month · 300 synced records · 1 GB')));
+   const pro=el('div','cp-pro');const text=el('div');text.append(el('strong','','Plus'),el('span','',proLine()));
    const price=pricing?.pro?.price;if(price)text.append(el('b','cp-pro-price',money(price)+' '+T('每月 / per month')));
    const onSale=pricing?pricing.pro.onSale:!!account.billing?.pro;
    const up=el('button','cp-primary',onSale?T('开通 Plus / Get Plus'):T('查看方案 / See plans'));up.type='button';up.onclick=()=>openWeb('/pricing');
@@ -93,7 +95,9 @@ globalThis.CreditsPanel=(()=>{
    pro.append(text);
    // the 7-day Plus trial, claimed here once (per account, device, browser and network)
    if(account.trialOffer){const t=el('button','cp-secondary',T('免费试用 '+account.trialOffer.days+' 天 / Try free for '+account.trialOffer.days+' days'));t.type='button';t.title=T('含 '+account.trialOffer.credits+' 积分，无需绑卡 / '+account.trialOffer.credits+' credits, no card');
-    t.onclick=async()=>{t.disabled=true;try{await Cloud.claimTrial();status(T('Plus 体验已开通 / Plus trial started'));render();}catch(error){status(error.message);t.disabled=false;}};pro.append(t);}
+    t.dataset.sound='claim';t.dataset.hoverSound='shine';const offer=account.trialOffer;
+    // a spinner while it is claimed; then the success window with the account's new numbers (plus-trial.js)
+    t.onclick=async()=>{if(t.disabled)return;try{const quota=await PlusTrial.claim(t);status(T('Plus 体验已开通 / Plus trial started'));render();PlusTrial.success(quota,offer);}catch(error){status(error.friendly||error.message);}};pro.append(t);}
    pro.append(up);dialog.append(pro);
   }else dialog.append(el('p','cp-hint',T('Plus 有效期至 / Plus until')+' '+(q.expiresAt?new Date(q.expiresAt).toLocaleDateString():'—')));
   const foot=el('div','cp-foot');const status_=el('span','cp-status');status_.setAttribute('role','status');

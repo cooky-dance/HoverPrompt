@@ -763,13 +763,30 @@ const GenFlow=(()=>{
  function lightbox(src,caption,{prompt='',name=''}={}){
   const sources=Array.isArray(src)?[...src]:[src];src=sources.shift()||'';
   let box=document.getElementById('imageLightbox');
-  if(!box){box=document.createElement('div');box.id='imageLightbox';box.setAttribute('role','dialog');box.setAttribute('aria-modal','true');box.innerHTML='<figure><img alt=""><figcaption></figcaption><div class="lightbox-actions"><button type="button" class="lightbox-download">下载 / Download</button><button type="button" class="lightbox-copy">复制提示词 / Copy prompt</button><button type="button" class="lightbox-share">发布到社区 / Post to community</button></div></figure><button type="button" class="lightbox-close" aria-label="关闭 / Close">×</button>';document.body.append(box);
+  if(!box){box=document.createElement('div');box.id='imageLightbox';box.setAttribute('role','dialog');box.setAttribute('aria-modal','true');box.innerHTML='<figure><img alt=""><figcaption></figcaption><div class="lightbox-actions"><button type="button" class="lightbox-download">下载 / Download</button><button type="button" class="lightbox-copy">复制提示词 / Copy prompt</button><button type="button" class="lightbox-copy-image">复制图片 / Copy image</button><button type="button" class="lightbox-share">发布到社区 / Post to community</button></div></figure><button type="button" class="lightbox-close" aria-label="关闭 / Close">×</button>';document.body.append(box);
    const close=()=>{box.hidden=true;};box.onclick=event=>{if(event.target===box||event.target.closest('.lightbox-close'))close();};document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!box.hidden)close();});
    box.querySelector('.lightbox-share').onclick=()=>{const img=box.querySelector('img');globalThis.CommunityShare?.open({images:[img.currentSrc||img.src],prompt:box.dataset.prompt||''});};
    box.querySelector('.lightbox-download').onclick=()=>downloadImage(box.querySelector('img').currentSrc||box.querySelector('img').src,box.dataset.name);
+   // the picture itself on the clipboard as PNG (downloaded where the clipboard refuses it)
+   box.querySelector('.lightbox-copy-image').onclick=async event=>{const button=event.currentTarget,img=box.querySelector('img'),src=img.currentSrc||img.src;button.disabled=true;
+    let text;try{text=(await copyImage(src,box.dataset.name))==='copied'?LanguageUI.text('图片已复制 / Image copied'):LanguageUI.text('无法复制图片，已下载 / Could not copy the image, so it was downloaded');}catch{text=LanguageUI.text('复制失败 / Copy failed');}
+    button.textContent=text;button.disabled=false;setTimeout(()=>{button.textContent=LanguageUI.text('复制图片 / Copy image');},1800);};
    box.querySelector('.lightbox-copy').onclick=async event=>{const button=event.currentTarget;try{await navigator.clipboard.writeText(box.dataset.prompt||'');button.textContent=LanguageUI.text('已复制 / Copied');}catch{button.textContent=LanguageUI.text('复制失败 / Copy failed');}setTimeout(()=>{button.textContent=LanguageUI.text('复制提示词 / Copy prompt');},1400);};}
   const img=box.querySelector('img');img.onerror=()=>{const next=sources.shift();if(next)img.src=next;else img.onerror=null;};img.src=src;box.querySelector('figcaption').textContent=caption||'';
-  box.dataset.prompt=String(prompt||'').trim();box.dataset.name=name||'';const copy=box.querySelector('.lightbox-copy');copy.disabled=!box.dataset.prompt;copy.textContent=LanguageUI.text('复制提示词 / Copy prompt');box.querySelector('.lightbox-download').textContent=LanguageUI.text('下载 / Download');box.querySelector('.lightbox-share').textContent=LanguageUI.text('发布到社区 / Post to community');box.querySelector('.lightbox-share').hidden=!globalThis.CommunityShare;box.hidden=false;
+  box.dataset.prompt=String(prompt||'').trim();box.dataset.name=name||'';const copy=box.querySelector('.lightbox-copy');copy.disabled=!box.dataset.prompt;copy.textContent=LanguageUI.text('复制提示词 / Copy prompt');box.querySelector('.lightbox-download').textContent=LanguageUI.text('下载 / Download');box.querySelector('.lightbox-copy-image').textContent=LanguageUI.text('复制图片 / Copy image');box.querySelector('.lightbox-copy-image').hidden=!src;box.querySelector('.lightbox-share').textContent=LanguageUI.text('发布到社区 / Post to community');box.querySelector('.lightbox-share').hidden=!globalThis.CommunityShare;box.hidden=false;
+ }
+ // an image (data:, blob:, extension or web address; the extension may read any site) as PNG on the clipboard: a JPEG or
+ // WebP is redrawn on a canvas first, since the clipboard takes PNG only. 'copied', or 'downloaded' when the clipboard
+ // refused (or cannot take images); throws when the image cannot be read at all.
+ async function copyImage(src,name){
+  if(!src)throw new Error('no image');
+  const png=(async()=>{const blob=await (await fetch(src)).blob();if(blob.size>25*1024*1024)throw new Error('too large');if(blob.type==='image/png')return blob;
+   const bitmap=await createImageBitmap(blob),canvas=document.createElement('canvas');canvas.width=bitmap.width;canvas.height=bitmap.height;canvas.getContext('2d').drawImage(bitmap,0,0);bitmap.close?.();
+   return new Promise((resolve,reject)=>canvas.toBlob(out=>out?resolve(out):reject(new Error('encode')),'image/png'));})();
+  png.catch(()=>{});
+  if(navigator.clipboard?.write&&globalThis.ClipboardItem){try{await navigator.clipboard.write([new ClipboardItem({'image/png':png})]);return 'copied';}catch{}}
+  await png; // unreadable: nothing to download either
+  await downloadImage(src,name);return 'downloaded';
  }
  async function downloadImage(src,name){
   if(!src)return;const ext=/^data:image\/png|\.png(\?|$)/i.test(src)?'png':/^data:image\/webp|\.webp(\?|$)/i.test(src)?'webp':'jpg';

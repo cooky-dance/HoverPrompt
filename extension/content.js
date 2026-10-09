@@ -1,5 +1,5 @@
 (() => {
-  const panelBuild='3.10.0',previousPanel=globalThis.__imagePromptPanelLoaded;
+  const panelBuild='3.10.1',previousPanel=globalThis.__imagePromptPanelLoaded;
   if(previousPanel?.version===panelBuild&&previousPanel.host?.isConnected){chrome.runtime.onMessage?.addListener(previousPanel.onMessage);return;}
   previousPanel?.host?.remove();
   document.querySelector('[data-imageprompt-floating-host]')?.remove();
@@ -77,6 +77,9 @@
       const scan={id:message.requestId,controller:new AbortController()};pageScan=scan;
       pageImages.collect(message.scope,{signal:scan.controller.signal,maxSteps:message.maxScreens}).then(result=>respond({...result,pageUrl:location.href})).catch(error=>respond({error:error.message})).finally(()=>{if(pageScan===scan)pageScan=null;});return true;
     }
+    // the toolbar icon asks whether the floating window is open, and closes it on a second press (background.js)
+    if(message.type==='PROMPT_PANEL_STATE'){respond({open:panel.style.display==='block',version:panelBuild});return;}
+    if(message.type==='CLOSE_PROMPT_PANEL'){panel.style.display='none';imageButtons.refresh();respond({closed:true});return;}
     if (message.type !== 'OPEN_PROMPT_PANEL') return;
     if(message.activateButtons)imageButtons.activate();openPanel(message.imageUrl);respond({opened:true,version:panelBuild});
   };

@@ -94,5 +94,7 @@
  const activation=document.createElement('label');activation.className='checkbox-setting';activation.innerHTML='<input type="checkbox" id="imageButtonsRequireActivation"> 点击扩展图标后显示图片提示词按钮 / Show image buttons after clicking extension icon';$('interfaceControls').append(activation);chrome.storage.local.get(['imageButtonsRequireActivation']).then(s=>$('imageButtonsRequireActivation').checked=s.imageButtonsRequireActivation===true);$('imageButtonsRequireActivation').onchange=()=>chrome.storage.local.set({imageButtonsRequireActivation:$('imageButtonsRequireActivation').checked});
  if(!embedded)document.querySelector('main').insertBefore($('status'),$('settings'));
  globalThis.SettingsLayout={navigate,addPage,removePage,page:()=>page};navigate('history');
+ // a double click on the toolbar icon opens the Library: a new tab at #library, or this tab by message (background.js)
+ if(!embedded){chrome.runtime.onMessage?.addListener((message,sender,respond)=>{if(message?.type!=='OPEN_SETTINGS_PAGE'||sender?.tab)return;navigate(message.page);respond({page});});addEventListener('hashchange',()=>{if(location.hash==='#library')navigate('history');});}
  if(embedded){sidebar.hidden=true;top.hidden=true;document.body.classList.add('compact-layout');}
 })();

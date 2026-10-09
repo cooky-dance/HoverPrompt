@@ -5,7 +5,9 @@ const SourceUI = (() => {
   const blank=()=>({id:crypto.randomUUID(),name:'新来源',protocol:'chat',baseUrl:'',apiKey:'',model:'',priority:100,timeoutSeconds:0,enabled:true,models:[]});
   const OLLAMA_URL='http://127.0.0.1:11434';
   async function getSettings() {
-    const saved=await chrome.storage.local.get(['sources','activeSourceId','routeMode','baseUrl','apiKey','model','requestControl']);
+    const saved=await chrome.storage.local.get(['sources','activeSourceId','routeMode','baseUrl','apiKey','model','requestControl','secretsLost']);
+    // the saved keys are encrypted with a key kept in this browser profile; if that key is gone (site data cleared) they cannot be opened
+    if(saved.secretsLost){chrome.storage.local.remove('secretsLost');setTimeout(()=>notice('已保存的 API Key 无法解密（浏览器清除了站点数据），请重新填写。 / The saved API keys could not be decrypted (site data was cleared). Please enter them again.'),80);}
     if(!Array.isArray(saved.sources)||!saved.sources.length) {
       const source={...blank(),name:'默认来源',baseUrl:saved.baseUrl || '',apiKey:saved.apiKey || '',model:saved.model || ''};
       saved.sources=[source];saved.activeSourceId=source.id;saved.routeMode='single';

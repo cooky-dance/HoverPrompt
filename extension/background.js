@@ -1,3 +1,5 @@
+// Encrypts the API keys and the account token kept in chrome.storage.local (see secret-store.js)
+if(typeof importScripts==='function')try{importScripts('secret-store.js');}catch{}
 chrome.runtime.onInstalled.addListener(async () => {
   await chrome.contextMenus.removeAll();
   chrome.contextMenus.create({id:'analyze-image',title:chrome.i18n?.getMessage('menuAnalyze')||'生成中英文提示词',contexts:['image']});
@@ -21,7 +23,36 @@ async function openPanel(tab, imageUrl, activateButtons=false) {
   if(existing){await chrome.tabs.update(existing.id,{active:true});if(existing.windowId)await chrome.windows.update(existing.windowId,{focused:true});if(imageUrl)await chrome.tabs.sendMessage(existing.id,{type:'OPEN_IMAGE_IN_SETTINGS',imageUrl});return;}
   await chrome.tabs.create({url:optionsUrl+(imageUrl?'?auto=1&image='+encodeURIComponent(imageUrl):'')});
 }
-chrome.action.onClicked.addListener(tab=>openPanel(tab,undefined,true));
+// Toolbar icon. One click: opens the floating window, or closes it when it is open. Double click (a second click on the
+// same tab within DOUBLE_CLICK_MS): opens the settings page at the Library. Opening waits out the double-click window, so
+// a double click never flashes the floating window open; closing happens at once. Whether the window is open is asked
+// from the page on every click (the panel's own × closes it too, and this service worker may have been restarted);
+// only the pending first click is kept in memory. Pages without the content script (browser pages, the Web Store) report
+// "unavailable" and keep the old fallback: the settings tab.
+const DOUBLE_CLICK_MS=320,pendingClicks=new Map();
+async function panelState(tab){
+  if(!tab?.id||!/^https?:\/\//.test(tab.url||''))return 'unavailable';
+  try{const response=await chrome.tabs.sendMessage(tab.id,{type:'PROMPT_PANEL_STATE'});return response?.open===true?'open':'closed';}catch{return 'closed';}
+}
+async function closePanel(tab){try{await chrome.tabs.sendMessage(tab.id,{type:'CLOSE_PROMPT_PANEL'});}catch{}}
+async function openLibrary(){
+  const optionsUrl=chrome.runtime.getURL('popup.html');
+  const existing=(await chrome.tabs.query({})).find(candidate=>candidate.url===optionsUrl||candidate.url?.startsWith(optionsUrl+'?')||candidate.url?.startsWith(optionsUrl+'#'));
+  if(existing){await chrome.tabs.update(existing.id,{active:true});if(existing.windowId)await chrome.windows.update(existing.windowId,{focused:true});await chrome.tabs.sendMessage(existing.id,{type:'OPEN_SETTINGS_PAGE',page:'history'}).catch(()=>{});return;}
+  await chrome.tabs.create({url:optionsUrl+'#library'});
+}
+function onActionClicked(tab){
+  const key=tab?.id??-1,first=pendingClicks.get(key);
+  if(first){pendingClicks.delete(key);clearTimeout(first.timer);first.done();return first.state.then(state=>state==='open'?closePanel(tab):null).then(openLibrary);}
+  const click={state:panelState(tab)};pendingClicks.set(key,click);
+  click.state.then(state=>{if(state==='open'&&pendingClicks.get(key)===click)return closePanel(tab);});
+  // resolves when this click has been handled (tests and callers can await it)
+  return new Promise(resolve=>{click.done=resolve;click.timer=setTimeout(async()=>{
+    if(pendingClicks.get(key)!==click)return resolve();pendingClicks.delete(key);
+    try{if(await click.state!=='open')await openPanel(tab,undefined,true);}finally{resolve();}
+  },DOUBLE_CLICK_MS);});
+}
+chrome.action.onClicked.addListener(onActionClicked);
 chrome.contextMenus.onClicked.addListener((info,tab)=>{
   if(info.menuItemId==='analyze-image') return openPanel(tab,info.srcUrl);
 });

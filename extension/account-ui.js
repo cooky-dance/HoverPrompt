@@ -101,10 +101,10 @@ globalThis.AccountUI=(()=>{
   }
   const actions=el('div','profile-actions');
   // Record images always sync; this capsule adds generated images.
-  const genToggle=el('button','sync-toggle');genToggle.type='button';genToggle.id='syncGenerationsToggle';genToggle.setAttribute('aria-pressed',String(Cloud.syncGenerations?.()===true));genToggle.textContent=T('同步生图 / Sync generated images');genToggle.title=T('开启后，生成的图片也会同步到云端，并计入云端存储 / Also sync generated images (counts toward cloud storage)');
+  const genToggle=el('button','sync-toggle');genToggle.type='button';genToggle.id='syncGenerationsToggle';genToggle.setAttribute('aria-pressed',String(Cloud.syncGenerations?.()===true));genToggle.textContent=T('同步生图 / Sync generated images');genToggle.title=T('开启后，生成的图片也会同步到云端，每张计入 1 张云同步图片 / Also sync generated images (each counts as one synced image)');
   genToggle.onclick=async()=>{await Cloud.setSyncGenerations(!Cloud.syncGenerations());};
   // Originals (on by default): the full-size image instead of the 1600 px copy, for records and generated images.
-  const origToggle=el('button','sync-toggle');origToggle.type='button';origToggle.id='syncOriginalsToggle';origToggle.setAttribute('aria-pressed',String(Cloud.syncOriginals?.()!==false));origToggle.textContent=T('同步原图 / Sync originals');origToggle.title=T('开启后，云端反推和同步保存原图（不压缩），计入云端存储 / Cloud analysis and sync keep the full-size original (counts toward cloud storage)');
+  const origToggle=el('button','sync-toggle');origToggle.type='button';origToggle.id='syncOriginalsToggle';origToggle.setAttribute('aria-pressed',String(Cloud.syncOriginals?.()!==false));origToggle.textContent=T('同步原图 / Sync originals');origToggle.title=T('开启后，云端反推和同步保存原图（不压缩） / Cloud analysis and sync keep the full-size original');
   origToggle.onclick=async()=>{await Cloud.setSyncOriginals(Cloud.syncOriginals()===false);};
   actions.append(genToggle,origToggle,...['syncCloud','refreshCloud','cloudAccount','claimGift','cloudLogout'].map($).filter(Boolean));card.append(actions);
  }
