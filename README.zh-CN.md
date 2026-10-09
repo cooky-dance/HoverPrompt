@@ -167,6 +167,6 @@ ChatGPT 生图工作台在你自己的浏览器里、用你自己的账号操作
 
 ## 许可证
 
-[MIT](LICENSE) © 2026 HoverPrompt。字体使用 SIL Open Font License（[extension/fonts/OFL.txt](extension/fonts/OFL.txt)），图标来自 [Lucide](https://lucide.dev)（[extension/icons/LUCIDE-LICENSE.txt](extension/icons/LUCIDE-LICENSE.txt)）。
+[HoverPrompt 源码可见许可证 1.0](LICENSE)（[中文参考译文](LICENSE.zh-CN.md)）© 2026 HoverPrompt：把插件当工具使用免费，包括收费项目；用代码做商业产品或服务，或再分发修改版、收费版，需要书面授权（support@hoverprompt.com）。v3.10.9 及更早版本按 MIT 许可证发布。字体使用 SIL Open Font License（[extension/fonts/OFL.txt](extension/fonts/OFL.txt)），图标来自 [Lucide](https://lucide.dev)（[extension/icons/LUCIDE-LICENSE.txt](extension/icons/LUCIDE-LICENSE.txt)）。
 
 HoverPrompt 的名称和图标用于标识官方扩展和网站；你自己发布的版本请使用其他名称和图标。

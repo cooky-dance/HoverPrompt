@@ -166,6 +166,6 @@ Issue とプルリクエストを歓迎します。変更は小さく焦点を�
 
 ## ライセンス
 
-[MIT](LICENSE) © 2026 HoverPrompt。フォントは SIL Open Font License（[extension/fonts/OFL.txt](extension/fonts/OFL.txt)）；アイコンは [Lucide](https://lucide.dev)（[extension/icons/LUCIDE-LICENSE.txt](extension/icons/LUCIDE-LICENSE.txt)）。
+[HoverPrompt Source-Available License 1.0](LICENSE) © 2026 HoverPrompt：ツールとして使うのは有償の仕事も含め無料です。コードを使った商用製品・サービスの構築、改変版や有償版の再配布には書面での許可が必要です（support@hoverprompt.com）。v3.10.9 までは MIT ライセンスで公開されています。フォントは SIL Open Font License（[extension/fonts/OFL.txt](extension/fonts/OFL.txt)）；アイコンは [Lucide](https://lucide.dev)（[extension/icons/LUCIDE-LICENSE.txt](extension/icons/LUCIDE-LICENSE.txt)）。
 
 HoverPrompt の名称とロゴは公式拡張とウェブサイトを示します；独自ビルドには別の名称とロゴを使ってください。

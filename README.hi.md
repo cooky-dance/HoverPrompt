@@ -166,6 +166,6 @@ Issues और pull requests का स्वागत है. बदलाव �
 
 ## लाइसेंस
 
-[MIT](LICENSE) © 2026 HoverPrompt. फ़ॉन्ट SIL Open Font License के अंतर्गत ([extension/fonts/OFL.txt](extension/fonts/OFL.txt)); आइकन [Lucide](https://lucide.dev) से ([extension/icons/LUCIDE-LICENSE.txt](extension/icons/LUCIDE-LICENSE.txt)).
+[HoverPrompt Source-Available License 1.0](LICENSE) © 2026 HoverPrompt: टूल के रूप में उपयोग मुफ़्त है, भुगतान वाले काम सहित। कोड से व्यावसायिक उत्पाद या सेवा बनाने, या बदली हुई/सशुल्क प्रतियाँ वितरित करने के लिए लिखित अनुमति चाहिए (support@hoverprompt.com)। v3.10.9 तक के संस्करण MIT लाइसेंस के तहत जारी हुए थे। फ़ॉन्ट SIL Open Font License के अंतर्गत ([extension/fonts/OFL.txt](extension/fonts/OFL.txt)); आइकन [Lucide](https://lucide.dev) से ([extension/icons/LUCIDE-LICENSE.txt](extension/icons/LUCIDE-LICENSE.txt)).
 
 HoverPrompt नाम और लोगो आधिकारिक एक्सटेंशन और वेबसाइट को पहचानते हैं; अपने बिल्ड के लिए अलग नाम और लोगो इस्तेमाल करें.

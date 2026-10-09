@@ -172,7 +172,7 @@ docs/                 screenshots and the CLI / agent guide
 
 ## الترخيص
 
-[MIT](LICENSE) © 2026 HoverPrompt. الخطوط بموجب SIL Open Font License ([extension/fonts/OFL.txt](extension/fonts/OFL.txt))؛ الأيقونات من [Lucide](https://lucide.dev) ([extension/icons/LUCIDE-LICENSE.txt](extension/icons/LUCIDE-LICENSE.txt)).
+[HoverPrompt Source-Available License 1.0](LICENSE) © 2026 HoverPrompt: الاستخدام كأداة مجاني، بما في ذلك العمل المدفوع. بناء منتج أو خدمة تجارية من الشيفرة، أو إعادة توزيع نسخ معدّلة أو مدفوعة، يتطلب إذنًا كتابيًا (support@hoverprompt.com). الإصدارات حتى v3.10.9 صدرت بترخيص MIT. الخطوط بموجب SIL Open Font License ([extension/fonts/OFL.txt](extension/fonts/OFL.txt))؛ الأيقونات من [Lucide](https://lucide.dev) ([extension/icons/LUCIDE-LICENSE.txt](extension/icons/LUCIDE-LICENSE.txt)).
 
 اسم HoverPrompt وشعاره يعرّفان الإضافة والموقع الرسميين؛ يُرجى استخدام اسم وشعار مختلفين لإصداراتك الخاصة.
 

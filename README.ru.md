@@ -166,6 +166,6 @@ Issues и pull request приветствуются. Держите измене
 
 ## Лицензия
 
-[MIT](LICENSE) © 2026 HoverPrompt. Шрифты — под SIL Open Font License ([extension/fonts/OFL.txt](extension/fonts/OFL.txt)); иконки — из [Lucide](https://lucide.dev) ([extension/icons/LUCIDE-LICENSE.txt](extension/icons/LUCIDE-LICENSE.txt)).
+[HoverPrompt Source-Available License 1.0](LICENSE) © 2026 HoverPrompt: пользоваться как инструментом бесплатно, в том числе в платной работе. Создание коммерческого продукта или сервиса на основе кода, а также распространение изменённых или платных копий требуют письменного разрешения (support@hoverprompt.com). Версии до v3.10.9 включительно выпущены под лицензией MIT. Шрифты — под SIL Open Font License ([extension/fonts/OFL.txt](extension/fonts/OFL.txt)); иконки — из [Lucide](https://lucide.dev) ([extension/icons/LUCIDE-LICENSE.txt](extension/icons/LUCIDE-LICENSE.txt)).
 
 Имя и логотип HoverPrompt обозначают официальное расширение и сайт; для своих сборок используйте другое имя и логотип.

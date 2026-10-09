@@ -166,6 +166,6 @@ ChatGPT Studio는 내 브라우저에서 내 계정으로 ChatGPT 웹 페이지�
 
 ## 라이선스
 
-[MIT](LICENSE) © 2026 HoverPrompt. 글꼴은 SIL Open Font License([extension/fonts/OFL.txt](extension/fonts/OFL.txt)); 아이콘은 [Lucide](https://lucide.dev)([extension/icons/LUCIDE-LICENSE.txt](extension/icons/LUCIDE-LICENSE.txt)).
+[HoverPrompt Source-Available License 1.0](LICENSE) © 2026 HoverPrompt: 도구로 사용하는 것은 유료 작업을 포함해 무료입니다. 코드로 상용 제품·서비스를 만들거나 수정본·유료 사본을 재배포하려면 서면 허가가 필요합니다(support@hoverprompt.com). v3.10.9까지는 MIT 라이선스로 배포되었습니다. 글꼴은 SIL Open Font License([extension/fonts/OFL.txt](extension/fonts/OFL.txt)); 아이콘은 [Lucide](https://lucide.dev)([extension/icons/LUCIDE-LICENSE.txt](extension/icons/LUCIDE-LICENSE.txt)).
 
 HoverPrompt 이름과 로고는 공식 확장과 웹사이트를 나타냅니다; 자체 빌드에는 다른 이름과 로고를 사용해 주세요.
