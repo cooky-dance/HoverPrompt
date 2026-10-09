@@ -24,7 +24,7 @@
 </p>
 
 <p align="center"><b>🆓 Free to use</b> — the extension is free; bring your own API key or run Ollama locally, no account needed.<br>
-Custom AI providers supported (OpenAI Chat/Responses, Anthropic, Gemini, Ollama; image gen: OpenAI-compatible, ModelScope, Gemini/Imagen, Seedream). Keys stay in <code>chrome.storage.local</code> on this device only — never synced or uploaded.<br>
+Custom AI providers supported (OpenAI Chat/Responses, Anthropic, Gemini, Ollama; image gen: OpenAI-compatible, ModelScope, Gemini/Imagen, Seedream). Keys are encrypted (AES-256-GCM) in <code>chrome.storage.local</code> on this device only — never synced or uploaded.<br>
 Optional cloud: <b>10</b> reverse prompts / month on Free, plus a <b>20</b>-credit install gift; Plus and credit packs are optional.</p>
 
 
@@ -43,7 +43,7 @@ Optional cloud: <b>10</b> reverse prompts / month on Free, plus a <b>20</b>-cred
 | 📚 **Library** | Every prompt and image, searchable in every language, with success rates and timings; export as a ZIP |
 | 🗂️ **Page collection & batch** | Collect a whole page of references (ads, icons and duplicates skipped), reverse a whole Xiaohongshu note, batch image-to-image |
 | ⌨️ **CLI & agents** | **Highlight:** connect to your HoverPrompt **account credits**, or control the extension to **auto-scan images and generate prompts**; also read the library and hand ready-made instructions to an AI agent |
-| 🔒 **Local first** | Works without an account; your API keys never leave your browser |
+| 🔒 **Local first** | Works without an account; your API keys never leave your browser and are stored encrypted |
 
 
 > Built for **designers**, **creatives**, **product** teams and **AI film & video** makers.
@@ -136,7 +136,8 @@ With an account: cloud reverse prompts and generation with credits, the skill ma
 In local mode you bring your own model and image APIs (settings → **API sources** and **Generation**).
 
 - **This repository contains no API keys, tokens or secrets.** Never commit yours.
-- Keys you enter are stored on
+- Keys you enter are stored encrypted (AES-256-GCM) only in the browser's extension storage (`chrome.storage.local`) and sent only to the API endpoint you configured. They are never uploaded to HoverPrompt.
+
 ## Project layout
 
 ```

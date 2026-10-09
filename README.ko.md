@@ -23,7 +23,7 @@
 </p>
 
 <p align="center"><b>🆓 무료 사용</b> — 확장 본체는 무료. 내 API 키 또는 로컬 Ollama만 입력하면 됩니다(계정 불필요).<br>
-지원: OpenAI Chat/Responses, Anthropic, Gemini, Ollama; 이미지 생성은 OpenAI 호환, ModelScope, Gemini/Imagen, Seedream. 키는 이 기기의 브라우저 <code>chrome.storage.local</code>에만 저장(동기화·업로드 없음).<br>
+지원: OpenAI Chat/Responses, Anthropic, Gemini, Ollama; 이미지 생성은 OpenAI 호환, ModelScope, Gemini/Imagen, Seedream. 키는 AES-256-GCM으로 암호화해 이 기기의 브라우저 <code>chrome.storage.local</code>에만 저장(동기화·업로드 없음).<br>
 선택 클라우드: 무료 월 <b>10</b>회 + 설치 선물 <b>20</b> 크레딧. Plus·팩은 선택.</p>
 
 
@@ -131,7 +131,7 @@ Chrome 또는 Edge 111 이상이 필요합니다. 빌드 단계 없음: 확장�
 로컬 모드에서는 내 모델과 이미지 API를 사용합니다(설정 → **API 소스** 및 **생성**).
 
 - **이 저장소에는 API 키, 토큰, 시크릿이 없습니다.** 자신의 것을 커밋하지 마세요.
-- 입력한 키는 브라우저의 확장 저장소(`chrome.storage.local`)에만 저장되며, 설정한 API 엔드포인트로만 전송됩니다. HoverPrompt에는 업로드되지 않습니다.
+- 입력한 키는 AES-256-GCM으로 암호화해 브라우저의 확장 저장소(`chrome.storage.local`)에만 저장되며, 설정한 API 엔드포인트로만 전송됩니다. HoverPrompt에는 업로드되지 않습니다.
 - 로컬 모델(예: `localhost`의 Ollama)도 동작하며 비용이 없습니다.
 
 

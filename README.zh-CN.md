@@ -23,7 +23,7 @@
 </p>
 
 <p align="center"><b>🆓 免费使用</b> — 插件本体免费；可自定义 AI 模型来源，只需填写自己的 API Key（或本机 Ollama），无需账号。<br>
-支持 OpenAI Chat/Responses、Anthropic、Gemini、Ollama；生图另支持 OpenAI 兼容、魔搭 ModelScope、Gemini/Imagen、火山方舟 Seedream。密钥只保存在本机浏览器 <code>chrome.storage.local</code>，不同步、不上传。<br>
+支持 OpenAI Chat/Responses、Anthropic、Gemini、Ollama；生图另支持 OpenAI 兼容、魔搭 ModelScope、Gemini/Imagen、火山方舟 Seedream。密钥以 AES-256-GCM 加密后只保存在本机浏览器 <code>chrome.storage.local</code>，不同步、不上传。<br>
 可选云端：免费版每月 <b>10</b> 次反推，另有安装赠送 <b>20</b> 积分；Plus 与积分包为可选项。</p>
 
 
@@ -42,7 +42,7 @@
 | 📚 **资料库** | 所有提示词和图片都在这里，支持全语言搜索，有成功率和耗时统计；可导出为 ZIP |
 | 🗂️ **整页采集与批量** | 整页收集参考图（自动跳过广告、图标和重复图），小红书笔记整篇反推，批量图生图 |
 | ⌨️ **CLI 与 Agent** | **重点：** 可连接 HoverPrompt **账号额度（积分）**；也可通过本地桥接**控制扩展**自动识别网页图片并生成提示词；同时可读资料库、把现成指令交给 AI Agent |
-| 🔒 **本地优先** | 不登录也能用；你的 API Key 不会离开浏览器 |
+| 🔒 **本地优先** | 不登录也能用；你的 API Key 不会离开浏览器，且加密保存 |
 
 
 > 面向**设计**、**创意**、**产品**与 **AI 影视**创作者打造。
@@ -135,7 +135,7 @@ Skill 是附加在反推指令上的写作规则，比如胶片型号和颗粒�
 本地模式下使用你自己的模型和生图 API（设置 → **API 来源** 和 **生成设置**）。
 
 - **本仓库不包含任何 API Key、令牌或密钥**，也请不要把你自己的提交进来。
-- 你填写的 Key 只保存在浏览器的扩展存储（`chrome
+- 你填写的 Key 以 AES-256-GCM 加密后只保存在浏览器的扩展存储（`chrome
 ## 目录结构
 
 ```

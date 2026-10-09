@@ -25,7 +25,7 @@
 </p>
 
 <p align="center"><b>🆓 مجاني للاستخدام</b> — الإضافة نفسها مجانية؛ أدخل مفتاح API الخاص بك أو Ollama المحلي (بلا حساب).<br>
-مدعوم: OpenAI Chat/Responses وAnthropic وGemini وOllama؛ التوليد: متوافق مع OpenAI وModelScope وGemini/Imagen وSeedream. المفاتيح في <code>chrome.storage.local</code> على جهازك فقط — بلا مزامنة أو رفع.<br>
+مدعوم: OpenAI Chat/Responses وAnthropic وGemini وOllama؛ التوليد: متوافق مع OpenAI وModelScope وGemini/Imagen وSeedream. المفاتيح مشفّرة (AES-256-GCM) في <code>chrome.storage.local</code> على جهازك فقط — بلا مزامنة أو رفع.<br>
 سحابة اختيارية: المجاني <b>10</b>/شهر + هدية تثبيت <b>20</b>؛ Plus والباقات اختيارية.</p>
 
 
@@ -133,7 +133,7 @@ node $cli local get TASK_ID
 في الوضع المحلي تستخدم نماذجك وواجهات صور API الخاصة بك (الإعدادات → **مصادر API** و**الإنشاء**).
 
 - **لا يحتوي هذا المستودع على مفاتيح API أو رموز أو أسرار.** لا تُدرج مفاتيحك في الالتزامات.
-- تُخزَّن المفاتيح التي تدخلها فقط في تخزين الإضافة بالمتصفح (`chrome.storage.local`) وتُرسل فقط إلى نقطة نهاية API التي ضبطتها. لا تُرفع إلى HoverPrompt.
+- تُخزَّن المفاتيح التي تدخلها مشفّرة (AES-256-GCM) فقط في تخزين الإضافة بالمتصفح (`chrome.storage.local`) وتُرسل فقط إلى نقطة نهاية API التي ضبطتها. لا تُرفع إلى HoverPrompt.
 - النماذج المحلية (مثل Ollama على `localhost`) تعمل أيضًا ودون تكلفة.
 
 

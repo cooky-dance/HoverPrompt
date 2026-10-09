@@ -23,7 +23,7 @@
 </p>
 
 <p align="center"><b>🆓 無料で使える</b> — 拡張本体は無料。自分の API キーまたは本機 Ollama を設定するだけ（アカウント不要）。<br>
-対応: OpenAI Chat/Responses、Anthropic、Gemini、Ollama；画像生成は OpenAI 互換、ModelScope、Gemini/Imagen、Seedream。キーは端末のブラウザ <code>chrome.storage.local</code> のみ（同期・アップロードなし）。<br>
+対応: OpenAI Chat/Responses、Anthropic、Gemini、Ollama；画像生成は OpenAI 互換、ModelScope、Gemini/Imagen、Seedream。キーは AES-256-GCM で暗号化して端末のブラウザ <code>chrome.storage.local</code> のみに保存（同期・アップロードなし）。<br>
 任意のクラウド：無料プランは月 <b>10</b> 回 + インストール特典 <b>20</b> クレジット。Plus / パックは任意。</p>
 
 
@@ -131,7 +131,7 @@ Chrome または Edge 111 以降が必要です。ビルド不要：拡張はプ
 ローカルモードでは、自分のモデルと画像 API を使います（設定 → **API ソース** と **生成**）。
 
 - **このリポジトリに API キー、トークン、シークレットは含まれていません。** 自分のものをコミットしないでください。
-- 入力したキーはブラウザの拡張ストレージ（`chrome.storage.local`）にだけ保存され、設定した API エンドポイントにだけ送られます。HoverPrompt にはアップロードされません。
+- 入力したキーは暗号化（AES-256-GCM）してブラウザの拡張ストレージ（`chrome.storage.local`）にだけ保存され、設定した API エンドポイントにだけ送られます。HoverPrompt にはアップロードされません。
 - ローカルモデル（例：`localhost` の Ollama）も使え、費用はかかりません。
 
 
