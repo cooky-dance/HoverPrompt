@@ -1550,3 +1550,7 @@ body.embedded header #focusPop button{display:inline-flex!important;grid-templat
 :root[data-appearance=light] body.embedded header .focus-chip-wrap button.focus-tag[aria-pressed=true]{background:#18222e!important;color:#fff!important;border-color:#18222e!important}
 :root[data-appearance=light] body.embedded header .focus-chip-wrap .focus-actions button.focus-clear{color:#3d4a5a!important;background:#18222e0f!important;border-color:#18222e33!important}
 :root[data-appearance=light] body.embedded header .focus-chip-wrap .focus-actions button.focus-done{background:#18222e!important;color:#fff!important;border-color:#18222e!important}
+/* floating window header: the chip must never be squeezed; the column is only about 320px wide, so it shows the icon and the state dot (the name is in the tooltip) */
+body.embedded header .focus-chip-wrap{flex:none!important}
+body.embedded header #focusChip{flex:none!important}
+body.embedded header #focusChip span{display:none}body.embedded header .focus-chip-wrap button.focus-chip{padding:0 10px!important;gap:5px!important}

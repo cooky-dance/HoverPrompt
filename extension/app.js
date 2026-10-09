@@ -797,7 +797,7 @@ const GenFlow=(()=>{
   const a=document.createElement('a');a.href=href;a.download=file;document.body.append(a);a.click();a.remove();if(revoke)setTimeout(()=>URL.revokeObjectURL(href),5000);
  }
  // up to 3 rows of thumbnails; with more than fit in 3 rows the strip becomes 3 rows that scroll sideways
- const stripRows=typeof ResizeObserver!=='function'?{observe(){}}:new ResizeObserver(entries=>{for(const entry of entries){const strip=entry.target,cell=strip.firstElementChild;if(!cell)continue;const size=cell.getBoundingClientRect().width||48,per=Math.max(1,Math.floor((entry.contentRect.width+6)/(size+6)));strip.classList.toggle('gen-strip-scroll',strip.children.length>per*3);}});
+ const stripRows=typeof ResizeObserver!=='function'?{observe(){}}:new ResizeObserver(entries=>{requestAnimationFrame(()=>{for(const entry of entries){const strip=entry.target,cell=strip.firstElementChild;if(!cell)continue;const size=cell.getBoundingClientRect().width||48,per=Math.max(1,Math.floor((entry.contentRect.width+6)/(size+6)));strip.classList.toggle('gen-strip-scroll',strip.children.length>per*3);}});});
  function strip(generations,{onOpen}={}){
   const box=document.createElement('div');box.className='gen-strip';
   for(const generation of generations){const cell=document.createElement('button');cell.type='button';cell.className='gen-thumb';cell.dataset.status=generation.status;cell.title=[generation.model,generation.error].filter(Boolean).join(' · ');
