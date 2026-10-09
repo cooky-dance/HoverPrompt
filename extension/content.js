@@ -11,7 +11,11 @@
   style.textContent = `button{font:13px system-ui;cursor:pointer;color:white;border:1px solid #ffffff70;background:#24282cbf;border-radius:20px;padding:7px 13px;pointer-events:auto}#hover{position:fixed;display:none}#panel{position:fixed;right:20px;top:70px;width:390px;height:min(760px,calc(100vh - 90px));border:1px solid #ffffff66;border-radius:24px;background:#24282bd9;backdrop-filter:blur(20px);box-shadow:none;pointer-events:auto;overflow:hidden;display:none}#bar{height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;color:#fff;font:600 12px system-ui;letter-spacing:1px}iframe{width:100%;height:calc(100% - 48px);border:0;outline:none;box-shadow:none;background:transparent}@media(max-width:450px){#panel{right:8px;width:calc(100vw - 16px)}}`;
   const panel = document.createElement('div'); panel.id = 'panel';
   const bar = document.createElement('div'); bar.id = 'bar';
-  const title = document.createElement('span'); title.textContent = 'HoverPrompt · v3.10.0';
+  // brand mark (icons/app-small.svg, inlined so it never depends on page access to the extension's files) and the installed version
+  const BRAND_ICON = '<svg viewBox="0 0 128 128" aria-hidden="true"><defs><linearGradient id="ipb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c5cff"/><stop offset=".55" stop-color="#5b6cff"/><stop offset="1" stop-color="#14b8a6"/></linearGradient><linearGradient id="iph" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#e3e0ff"/></linearGradient></defs><rect x="4" y="4" width="120" height="120" rx="30" fill="url(#ipb)"/><rect x="22" y="24" width="84" height="80" rx="14" fill="none" stroke="#fff" stroke-width="10"/><circle cx="50" cy="50" r="9" fill="#ffd66b"/><path d="M27 96 L52 68 L66 80 L80 62 L101 96 Z" fill="url(#iph)"/><path d="M100 14 l5 12 12 5 -12 5 -5 12 -5 -12 -12 -5 12 -5z" fill="#ffd66b"/></svg>';
+  const installedVersion = (() => { try { return chrome.runtime.getManifest().version; } catch { return ''; } })();
+  const title = document.createElement('span'); title.className = 'brand'; title.innerHTML = BRAND_ICON + '<b></b>';
+  title.querySelector('b').textContent = 'HoverPrompt' + (installedVersion ? ' · v' + installedVersion : '');
   const close = document.createElement('button'); close.textContent = '×'; close.setAttribute('aria-label', '关闭悬浮窗');
   const pin = document.createElement('button'); pin.id = 'pin'; pin.textContent = '♧'; pin.title = '固定位置 / Pin position'; pin.setAttribute('aria-pressed', 'false');
   // Day/night switch: first button in the window bar (before pin and close); shares appearanceMode with the settings page.
@@ -20,12 +24,14 @@
   const frame = document.createElement('iframe'); frame.title = '图片提示词分析';
   frame.style.colorScheme='light';
   frame.allow = 'clipboard-write';
-  bar.append(title, actions); panel.append(bar, frame); root.append(style, panel); document.documentElement.append(host);
+  const grip = document.createElement('div'); grip.id = 'resizeGrip'; grip.tabIndex = 0; grip.setAttribute('role', 'separator'); grip.setAttribute('aria-orientation', 'horizontal');
+  grip.setAttribute('aria-label', '拖动调整窗口高度，双击恢复默认 / Drag to resize the window height, double-click to reset'); grip.title = grip.getAttribute('aria-label');
+  bar.append(title, actions); panel.append(bar, frame, grip); root.append(style, panel); document.documentElement.append(host);
   globalThis.LiquidGlass?.install(root);
   // Window chrome matches the in-frame design: one UI font, 8px glass squares, ink for the pressed pin.
   const chromeStyle=document.createElement('style');chromeStyle.textContent=`#panel #bar{font:600 12px 'Segoe UI Variable Text','Segoe UI','Microsoft YaHei UI','PingFang SC',system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;font-weight:700;opacity:.92}#panel #windowActions{gap:6px}#panel #windowActions button{width:28px;height:28px;padding:0;border-radius:8px;display:grid;place-items:center;font:500 14px/1 'Segoe UI',system-ui,sans-serif;color:inherit;background:#ffffff1f;border:1px solid #ffffff38;box-shadow:inset 0 1px 0 #ffffff33}#panel #windowActions button:hover{background:#ffffff38}#panel[data-mode=light] #windowActions button{background:#ffffffa6;border-color:#0000001a;box-shadow:inset 0 1px 0 #fff}#panel[data-mode=light] #windowActions button:hover{background:#fff}#panel #pin[aria-pressed="true"]{background:#f4f4f5;color:#111113;border-color:#f4f4f5}#panel[data-mode=light] #pin[aria-pressed="true"]{background:#111113;color:#fff;border-color:#111113}`;root.append(chromeStyle);
   const imageButtons=ImagePromptButtons.create(root,host,(src,action)=>openPanel(src,action));
-  function applyAppearance(saved){const light=saved.appearanceMode==='light'||(saved.appearanceMode!=='dark'&&!matchMedia('(prefers-color-scheme: dark)').matches),glass=saved.glassEffect!==false;panel.style.background=light?(glass?'#8e8e968f':'#8e8e96'):(glass?'#2a2a2eb8':'#2a2a2e');bar.style.color='#fff';panel.style.backdropFilter=glass?(CSS.supports('backdrop-filter','url(#ip-liquid)')?'url(#ip-liquid-soft) blur(14px) saturate(1.7)':'blur(20px) saturate(1.6)'):'none';panel.style.border=light?'1px solid #ffffffd9':'1px solid #ffffff26';panel.style.boxShadow='none';dayNight.innerHTML=light?"<svg viewBox='0 0 24 24' width='15' height='15' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><path d='M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z'/></svg>":"<svg viewBox='0 0 24 24' width='15' height='15' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><circle cx='12' cy='12' r='4'/><path d='M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4'/></svg>";dayNight.title=light?'切换到深色 / Switch to dark':'切换到浅色 / Switch to light';dayNight.setAttribute('aria-label',dayNight.title);panel.dataset.mode=light?'light':'dark';}
+  function applyAppearance(saved){const light=saved.appearanceMode==='light'||(saved.appearanceMode!=='dark'&&!matchMedia('(prefers-color-scheme: dark)').matches),glass=saved.glassEffect!==false;panel.style.background=light?(glass?'#8e8e968f':'#8e8e96'):(glass?'#2a2a2eb8':'#2a2a2e');bar.style.color='#fff';panel.classList.toggle('light',light);panel.style.backdropFilter=glass?(CSS.supports('backdrop-filter','url(#ip-liquid)')?'url(#ip-liquid-soft) blur(14px) saturate(1.7)':'blur(20px) saturate(1.6)'):'none';panel.style.border=light?'1px solid #ffffffd9':'1px solid #ffffff26';panel.style.boxShadow='none';dayNight.innerHTML=light?"<svg viewBox='0 0 24 24' width='15' height='15' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><path d='M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z'/></svg>":"<svg viewBox='0 0 24 24' width='15' height='15' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><circle cx='12' cy='12' r='4'/><path d='M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4'/></svg>";dayNight.title=light?'切换到深色 / Switch to dark':'切换到浅色 / Switch to light';dayNight.setAttribute('aria-label',dayNight.title);panel.dataset.mode=light?'light':'dark';}
   dayNight.onclick=async()=>{const saved=await chrome.storage.local.get(['appearanceMode']);const light=saved.appearanceMode==='light'||(saved.appearanceMode!=='dark'&&!matchMedia('(prefers-color-scheme: dark)').matches);await chrome.storage.local.set({appearanceMode:light?'dark':'light'});};
   chrome.storage.local.get(['appearanceMode','glassEffect']).then(applyAppearance);
   chrome.storage.onChanged?.addListener((changes,area)=>{if(area==='local'&&(changes.appearanceMode||changes.glassEffect))chrome.storage.local.get(['appearanceMode','glassEffect']).then(applyAppearance);});
@@ -67,7 +73,7 @@
     if(src)pendingImages.push({url:src,action:action||''});
     if (!frame.getAttribute('src')) startFrame();
     sendPendingImages();
-    panel.style.display = 'block';clampPosition();imageButtons.refresh();
+    panel.style.display = 'block';clampPosition();applyHeight();imageButtons.refresh();
   }
   const onPanelMessage=(message, sender, respond) => {
     if(message.type==='CLI_COLLECT_PAGE_IMAGES'){
@@ -162,6 +168,39 @@
   };
   const finishDrag = async () => { if (!drag) return;drag=null;frame.style.pointerEvents='';await savePosition(); };
   bar.onpointerup = finishDrag;bar.onpointercancel = finishDrag;
+  // Height: drag the grip at the bottom edge (or use the arrow keys). The chosen height is kept and used every time the window
+  // opens, on any site; a smaller screen only shows less of it. Double-click the grip for the default height again.
+  const MIN_HEIGHT = 320, HEIGHT_KEY = 'floatingWindowHeight';
+  let savedHeight = null, resizing = null;
+  const maxHeight = () => Math.max(MIN_HEIGHT, innerHeight - Math.max(8, panel.getBoundingClientRect().top) - 8);
+  function applyHeight() { panel.style.height = savedHeight == null ? '' : Math.round(Math.min(savedHeight, maxHeight())) + 'px'; }
+  const keepHeight = async () => { try { await chrome.storage?.local.set({ [HEIGHT_KEY]: Math.round(savedHeight) }); } catch { /* storage unavailable */ } };
+  grip.onpointerdown = event => {
+    if (event.button !== 0) return;
+    resizing = { y: event.clientY, h: panel.getBoundingClientRect().height };
+    grip.setPointerCapture(event.pointerId); frame.style.pointerEvents = 'none'; panel.classList.add('resizing'); event.preventDefault();
+  };
+  grip.onpointermove = event => {
+    if (!resizing) return;
+    savedHeight = Math.max(MIN_HEIGHT, Math.min(resizing.h + event.clientY - resizing.y, maxHeight()));
+    panel.style.height = Math.round(savedHeight) + 'px';
+  };
+  const finishResize = async () => { if (!resizing) return; resizing = null; frame.style.pointerEvents = ''; panel.classList.remove('resizing'); await keepHeight(); };
+  grip.onpointerup = finishResize; grip.onpointercancel = finishResize;
+  grip.ondblclick = async () => { savedHeight = null; applyHeight(); try { await chrome.storage?.local.remove(HEIGHT_KEY); } catch { /* ignore */ } };
+  grip.onkeydown = async event => {
+    const step = event.shiftKey ? 96 : 24, now = panel.getBoundingClientRect().height;
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') savedHeight = Math.max(MIN_HEIGHT, Math.min(now + (event.key === 'ArrowDown' ? step : -step), maxHeight()));
+    else if (event.key === 'Home') savedHeight = MIN_HEIGHT;
+    else if (event.key === 'End') savedHeight = maxHeight();
+    else return;
+    event.preventDefault(); applyHeight(); await keepHeight();
+  };
+  chrome.storage?.local.get([HEIGHT_KEY]).then(saved => { if (Number.isFinite(saved[HEIGHT_KEY])) { savedHeight = saved[HEIGHT_KEY]; applyHeight(); } }).catch(() => {});
+  chrome.storage?.onChanged?.addListener((changes, area) => {
+    if (area !== 'local' || !changes[HEIGHT_KEY] || resizing) return;
+    const next = changes[HEIGHT_KEY].newValue; savedHeight = Number.isFinite(next) ? next : null; applyHeight();
+  });
   chrome.storage?.local.get(['floatingWindow']).then(saved => {
     const position=saved.floatingWindow;if(!position)return;
     pinned=position.pinned===true;pin.textContent=pinned?'📌':'♧';pin.setAttribute('aria-pressed',String(pinned));
@@ -200,7 +239,7 @@
     if (event.data?.type === 'prompt-history-width') {panel.style.width = event.data.open ? 'min(610px,calc(100vw - 16px))' : 'min(350px,calc(100vw - 16px))';clampPosition();}
   });
   style.textContent += '#panel{width:min(350px,calc(100vw - 16px));height:min(690px,calc(100vh - 50px));top:24px;background:linear-gradient(145deg,#62655b9c,#161a1ae0);backdrop-filter:blur(28px);border-radius:26px}#bar{height:44px;color:#dae0e4;font-size:12px}iframe{height:calc(100% - 44px)}';
-  style.textContent += '#bar{cursor:grab;touch-action:none;user-select:none}#windowActions{display:flex;gap:5px}#windowActions button{width:30px;height:30px;padding:0}#pin[aria-pressed="true"]{background:#bc763b99}';
-  addEventListener('resize', () => { clampPosition();imageButtons.refresh(); });
+  style.textContent += '#bar{cursor:grab;touch-action:none;user-select:none}#windowActions{display:flex;gap:5px}#bar .brand{display:inline-flex;align-items:center;gap:7px;height:28px;padding:0 12px 0 5px;border-radius:999px;background:#0000004d;color:#fff}#bar .brand svg{width:20px;height:20px;flex:none;border-radius:6px}#bar .brand b{font-weight:700}#panel.light #bar .brand{background:#ffffffd9;color:#18222e;box-shadow:0 1px 2px #0000001f}#panel.light #bar button{color:#18222e;background:#ffffffb3;border-color:#ffffffe0}#resizeGrip{position:absolute;inset-inline:0;bottom:0;height:12px;cursor:ns-resize;touch-action:none;border-radius:0 0 26px 26px}#resizeGrip::before{content:"";position:absolute;left:50%;top:4px;width:44px;height:4px;margin-left:-22px;border-radius:2px;background:#ffffff73;transition:background .15s,width .15s,margin-left .15s}#resizeGrip:hover::before,#resizeGrip:focus-visible::before,#panel.resizing #resizeGrip::before{background:#ffffffe6;width:64px;margin-left:-32px}#panel.light #resizeGrip::before{background:#18222e66}#panel.light #resizeGrip:hover::before,#panel.light #resizeGrip:focus-visible::before,#panel.light.resizing #resizeGrip::before{background:#18222ecc}#resizeGrip:focus-visible{outline:2px solid #fff;outline-offset:-3px}#panel.resizing{user-select:none}iframe{height:calc(100% - 56px)}#windowActions button{width:30px;height:30px;padding:0}#pin[aria-pressed="true"]{background:#bc763b99}';
+  addEventListener('resize', () => { clampPosition();applyHeight();imageButtons.refresh(); });
   globalThis.__imagePromptPanelLoaded={version:panelBuild,host,onMessage:onPanelMessage};
 })();

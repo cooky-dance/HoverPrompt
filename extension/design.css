@@ -1479,3 +1479,74 @@ body.embedded dialog#plusTrialSuccess{width:calc(100vw - 16px)}
 body.embedded #plusTrialSuccess .pt-card{padding:30px 14px 16px}
 body.embedded #plusTrialSuccess .pt-perks{gap:6px}
 body.embedded #plusTrialSuccess .pt-actions{flex-direction:column}body.embedded #plusTrialSuccess .pt-go,body.embedded #plusTrialSuccess .pt-more{flex:none;width:100%}
+
+/* Focus chip: a custom recognition focus for the reverse prompt; lit up while a focus is set */
+.focus-chip-wrap{position:relative;display:inline-flex;flex:none;margin-inline-start:auto;order:3}
+.embedded .focus-chip-wrap{margin-inline-start:0;margin-inline-end:auto;order:0}
+.focus-chip{display:inline-flex;align-items:center;gap:6px;height:32px;min-height:32px!important;margin:0!important;padding:0 12px!important;border-radius:999px!important;border:1px solid var(--line)!important;background:transparent!important;box-shadow:none!important;color:var(--muted)!important;font:inherit;font-size:12.5px!important;font-weight:650;line-height:1;white-space:nowrap;cursor:pointer}
+.focus-chip svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round}
+.focus-chip:hover{color:var(--text)!important}
+.focus-chip:focus-visible,.focus-tag:focus-visible,.focus-actions button:focus-visible{outline:2px solid var(--accent,#7c5cff);outline-offset:2px}
+.focus-chip .dot{display:none;width:7px;height:7px;border-radius:50%;background:#59e39a}
+.focus-chip[aria-pressed=true]{background:var(--ink,#16171d)!important;color:var(--ink-text,#fff)!important;border-color:var(--ink,#16171d)!important}
+.focus-chip[aria-pressed=true] .dot{display:inline-block}
+.focus-pop{position:absolute;z-index:60;top:calc(100% + 8px);inset-inline-end:0;width:min(360px,calc(100vw - 28px));padding:14px;border-radius:16px;border:1px solid var(--line);background:var(--surface,#fff);color:var(--text);box-shadow:0 18px 44px #0000003d;text-align:start}
+.focus-pop[hidden]{display:none}
+.embedded .focus-pop{inset-inline-end:auto;inset-inline-start:0;width:min(320px,calc(100vw - 24px))}
+.focus-title{margin:0 0 6px;font-size:13px;font-weight:700;color:var(--text)}
+.focus-field input{display:block;width:100%;margin:0;min-height:38px}
+.focus-note{margin:8px 0 0;font-size:12px;line-height:1.45;color:var(--muted)}
+.focus-tags{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0}
+.focus-tag{height:28px;min-height:28px!important;margin:0!important;padding:0 10px!important;border-radius:999px!important;border:1px solid var(--line)!important;background:transparent!important;box-shadow:none!important;color:var(--muted)!important;font-size:12px!important;font-weight:600;cursor:pointer}
+.focus-tag:hover{color:var(--text)!important}
+.focus-tag[aria-pressed=true]{background:var(--ink,#16171d)!important;color:var(--ink-text,#fff)!important;border-color:var(--ink,#16171d)!important}
+.focus-actions{display:flex;justify-content:space-between;gap:8px;margin-top:12px}
+.focus-actions button{min-height:34px!important;margin:0!important;padding:0 16px!important;border-radius:10px!important;font-size:13px!important;cursor:pointer}
+.focus-actions .focus-clear{background:transparent!important;border:1px solid var(--line)!important;color:var(--muted)!important}
+.focus-actions .focus-clear:disabled{opacity:.45;cursor:default}
+.focus-actions .focus-done{background:var(--ink,#16171d)!important;color:var(--ink-text,#fff)!important;border:1px solid var(--ink,#16171d)!important}
+html.focus-pop-open #imageSelection{position:relative;z-index:30}
+/* floating window: the header's round icon-button rules must not shape the chip and the panel */
+body.embedded header .focus-chip-wrap{margin-inline-end:auto}
+body.embedded header .focus-chip-wrap button{width:auto!important;height:auto!important;min-height:0!important;padding:0!important;border-radius:999px!important;display:inline-flex!important;grid-template:none!important;align-items:center!important;justify-content:center!important;line-height:1!important;font-size:12px!important;font-weight:650!important;box-shadow:none!important;color:#ffffffd9!important;background:#ffffff1f!important;border:1px solid #ffffff47!important}
+body.embedded header .focus-chip-wrap button::before,body.embedded header .focus-chip-wrap button::after{content:none!important}
+body.embedded header .focus-chip-wrap button.focus-chip{height:32px!important;padding:0 12px!important;gap:6px!important;font-size:12.5px!important;flex-direction:row!important;flex-wrap:nowrap!important;white-space:nowrap!important}
+body.embedded header .focus-chip-wrap button.focus-chip .dot{display:none!important}
+body.embedded header .focus-chip-wrap button.focus-chip[aria-pressed=true]{background:#fff!important;color:#16171d!important;border-color:#fff!important}
+body.embedded header .focus-chip-wrap button.focus-chip[aria-pressed=true] .dot{display:inline-block!important}
+body.embedded header .focus-chip-wrap .focus-pop{background:rgba(36,41,48,.97);color:#f4f6f8;border-color:#ffffff33;box-shadow:0 18px 44px #0000006b}
+body.embedded header .focus-chip-wrap .focus-title{color:#fff}
+body.embedded header .focus-chip-wrap .focus-note{color:#ffffffa6}
+body.embedded header .focus-chip-wrap .focus-field input{background:#ffffff14;color:#fff;border:1px solid #ffffff38;border-radius:10px;padding:0 12px;box-shadow:none}
+body.embedded header .focus-chip-wrap .focus-field input::placeholder{color:#ffffff80}
+body.embedded header .focus-chip-wrap button.focus-tag{height:28px!important;padding:0 10px!important;font-size:12px!important}
+body.embedded header .focus-chip-wrap button.focus-tag[aria-pressed=true]{background:#fff!important;color:#16171d!important;border-color:#fff!important}
+body.embedded header .focus-chip-wrap .focus-actions button{height:34px!important;padding:0 16px!important;border-radius:10px!important;font-size:13px!important}
+body.embedded header .focus-chip-wrap .focus-actions button.focus-done{background:#fff!important;color:#16171d!important;border-color:#fff!important}
+body.embedded header .focus-chip-wrap .focus-actions button.focus-clear:disabled{opacity:.45!important}
+/* the header's icon rule carries an id selector, so these need one too */
+body.embedded header #focusChip{display:inline-flex!important;flex-direction:row!important;grid-template:none!important;line-height:1!important}
+body.embedded header #focusPop button{display:inline-flex!important;grid-template:none!important;line-height:1.1!important}
+
+/* local image panel in the floating window: a solid card, readable in both appearances (it used the translucent glass colour, so the cards behind showed through) */
+.local-upload-pane{background:rgba(38,45,53,.98)!important;color:#f4f6f8!important;border:1px solid #ffffff3d!important;box-shadow:0 18px 44px #0000006b!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.local-upload-pane #dropzone{background:#ffffff0f!important;border:1.5px dashed #ffffff57!important;color:#ffffffc7!important;border-radius:12px}
+.local-upload-pane #dropzone.over{border-color:#fff!important;background:#ffffff24!important}
+.local-upload-pane button{background:#ffffff1f!important;color:#fff!important;border:1px solid #ffffff47!important}
+.local-upload-pane>button:last-child{min-height:38px;border-radius:12px!important;font-weight:650}
+:root[data-appearance=light] .local-upload-pane{background:rgba(252,252,254,.98)!important;color:#18222e!important;border-color:#18222e2e!important;box-shadow:0 18px 44px #18222e40!important}
+:root[data-appearance=light] .local-upload-pane #dropzone{background:#18222e0a!important;border-color:#18222e4d!important;color:#3d4a5a!important}
+:root[data-appearance=light] .local-upload-pane #dropzone.over{border-color:#5b6cff!important;background:#5b6cff14!important}
+:root[data-appearance=light] .local-upload-pane button{background:#18222e0f!important;color:#18222e!important;border-color:#18222e33!important}
+/* floating window, light appearance: dark text on light pills, like the title badge */
+:root[data-appearance=light] body.embedded header .focus-chip-wrap button.focus-chip{color:#18222e!important;background:#ffffffb8!important;border-color:#ffffffe6!important}
+:root[data-appearance=light] body.embedded header .focus-chip-wrap button.focus-chip[aria-pressed=true]{background:#18222e!important;color:#fff!important;border-color:#18222e!important}
+:root[data-appearance=light] body.embedded header .focus-chip-wrap .focus-pop{background:rgba(252,252,254,.98);color:#18222e;border-color:#18222e2e;box-shadow:0 18px 44px #18222e40}
+:root[data-appearance=light] body.embedded header .focus-chip-wrap .focus-title{color:#18222e}
+:root[data-appearance=light] body.embedded header .focus-chip-wrap .focus-note{color:#3d4a5a}
+:root[data-appearance=light] body.embedded header .focus-chip-wrap .focus-field input{background:#18222e0a;color:#18222e;border-color:#18222e33}
+:root[data-appearance=light] body.embedded header .focus-chip-wrap .focus-field input::placeholder{color:#18222e8c}
+:root[data-appearance=light] body.embedded header .focus-chip-wrap button.focus-tag{color:#3d4a5a!important;background:#18222e0f!important;border-color:#18222e33!important}
+:root[data-appearance=light] body.embedded header .focus-chip-wrap button.focus-tag[aria-pressed=true]{background:#18222e!important;color:#fff!important;border-color:#18222e!important}
+:root[data-appearance=light] body.embedded header .focus-chip-wrap .focus-actions button.focus-clear{color:#3d4a5a!important;background:#18222e0f!important;border-color:#18222e33!important}
+:root[data-appearance=light] body.embedded header .focus-chip-wrap .focus-actions button.focus-done{background:#18222e!important;color:#fff!important;border-color:#18222e!important}

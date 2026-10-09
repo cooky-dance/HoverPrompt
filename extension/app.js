@@ -204,6 +204,8 @@ async function analyze(savedTask = null) {
     return;
   }
   const submittedAt=Date.now();
+  // the saved recognition focus may still be loading when a page button starts an analysis straight away
+  if(!savedTask?.image)await globalThis.FocusChip?.ready;
   const focus = savedTask?.image ? savedTask.focus || '' : $("focus").value.trim();
   submitting.add(id);currentId=id;setBusy();
   let task;
@@ -280,7 +282,7 @@ function showTask(task) {
   $("resultImage").src = task.image;
   $("preview").src = task.image;
   $("preview").hidden = false;
-  $("focus").value = task.focus || "";
+  // the recognition focus is a standing setting (the Focus chip); showing a record must not overwrite it. Re-analysing a record uses its own saved focus.
   $("zh").value = task.zh || "";
   $("en").value = task.en || "";
   $("result").hidden = !hasResult;
