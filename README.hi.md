@@ -24,7 +24,7 @@
 
 <p align="center"><b>🆓 मुफ़्त उपयोग</b> — एक्सटेंशन मुफ़्त; अपनी API कुंजी या लोकल Ollama दर्ज करें (खाता ज़रूरी नहीं)।<br>
 समर्थित: OpenAI Chat/Responses, Anthropic, Gemini, Ollama; इमेज जन: OpenAI-संगत, ModelScope, Gemini/Imagen, Seedream. कुंजियाँ AES-256-GCM से एन्क्रिप्ट होकर केवल इस डिवाइस के ब्राउज़र <code>chrome.storage.local</code> में — सिंक/अपलोड नहीं。<br>
-वैकल्पिक क्लाउड: Free पर महीने <b>10</b> + इंस्टॉल उपहार <b>20</b> क्रेडिट; Plus/पैक वैकल्पिक।</p>
+वैकल्पिक क्लाउड: Free पर महीने <b>40</b> + इंस्टॉल उपहार <b>20</b> क्रेडिट; Plus/पैक वैकल्पिक।</p>
 
 
 ---

@@ -24,7 +24,7 @@
 
 <p align="center"><b>🆓 무료 사용</b> — 확장 본체는 무료. 내 API 키 또는 로컬 Ollama만 입력하면 됩니다(계정 불필요).<br>
 지원: OpenAI Chat/Responses, Anthropic, Gemini, Ollama; 이미지 생성은 OpenAI 호환, ModelScope, Gemini/Imagen, Seedream. 키는 AES-256-GCM으로 암호화해 이 기기의 브라우저 <code>chrome.storage.local</code>에만 저장(동기화·업로드 없음).<br>
-선택 클라우드: 무료 월 <b>10</b>회 + 설치 선물 <b>20</b> 크레딧. Plus·팩은 선택.</p>
+선택 클라우드: 무료 월 <b>40</b>회 + 설치 선물 <b>20</b> 크레딧. Plus·팩은 선택.</p>
 
 
 ---

@@ -26,7 +26,7 @@
 
 <p align="center"><b>🆓 مجاني للاستخدام</b> — الإضافة نفسها مجانية؛ أدخل مفتاح API الخاص بك أو Ollama المحلي (بلا حساب).<br>
 مدعوم: OpenAI Chat/Responses وAnthropic وGemini وOllama؛ التوليد: متوافق مع OpenAI وModelScope وGemini/Imagen وSeedream. المفاتيح مشفّرة (AES-256-GCM) في <code>chrome.storage.local</code> على جهازك فقط — بلا مزامنة أو رفع.<br>
-سحابة اختيارية: المجاني <b>10</b>/شهر + هدية تثبيت <b>20</b>؛ Plus والباقات اختيارية.</p>
+سحابة اختيارية: المجاني <b>40</b>/شهر + هدية تثبيت <b>20</b>؛ Plus والباقات اختيارية.</p>
 
 
 ---

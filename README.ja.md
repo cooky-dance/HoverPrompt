@@ -24,7 +24,7 @@
 
 <p align="center"><b>🆓 無料で使える</b> — 拡張本体は無料。自分の API キーまたは本機 Ollama を設定するだけ（アカウント不要）。<br>
 対応: OpenAI Chat/Responses、Anthropic、Gemini、Ollama；画像生成は OpenAI 互換、ModelScope、Gemini/Imagen、Seedream。キーは AES-256-GCM で暗号化して端末のブラウザ <code>chrome.storage.local</code> のみに保存（同期・アップロードなし）。<br>
-任意のクラウド：無料プランは月 <b>10</b> 回 + インストール特典 <b>20</b> クレジット。Plus / パックは任意。</p>
+任意のクラウド：無料プランは月 <b>40</b> 回 + インストール特典 <b>20</b> クレジット。Plus / パックは任意。</p>
 
 
 ---
