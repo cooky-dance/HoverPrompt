@@ -1559,3 +1559,8 @@ body.embedded header #focusChip span{display:none}body.embedded header .focus-ch
 .embedded #settings:not([hidden]){position:relative}
 .embedded #settings .settings-close{display:grid;place-items:center;position:sticky;top:0;float:right;z-index:5;width:30px!important;height:30px!important;min-height:0;margin:-4px -4px 0 8px;padding:0!important;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:18px!important;line-height:1;cursor:pointer}
 .embedded #settings .settings-close:hover,.embedded #settings .settings-close:focus-visible{background:var(--surface-2,var(--surface));outline:2px solid var(--accent,#7c6cff);outline-offset:1px}
+/* Settings → Interface: backup and move (backup.js) */
+.backup-card{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+.backup-card h3{margin:0 0 6px}
+.backup-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.backup-status{min-height:1.4em;margin-top:8px}

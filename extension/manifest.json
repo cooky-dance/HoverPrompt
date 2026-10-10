@@ -1,7 +1,8 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extName__",
-  "version": "3.10.12",
+  "version": "3.10.13",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4YCAHAAfNKuQbwly18UiVrrKbGoA5t9Vs8eL9OWVJ/Awu3K1NxGtzYO3Xadr1lBMrjipYm/9lcMqmsSvTSxenQJ3i1HQiqG43yem83hlVRwxC4ZZUyFHqipyw0mlw1+YjbStqTCFjmNp1EqtQmq6Nk8Yga8n/IutYvy8nWEVuE+srBHqim9n3mRUqScfZGMHTCeCSBXy1Q3Y5XB6v6NC2lznNRuXlQJdR8Clsv/ngJRnZj25vKcOR15uiFcz9jamZR8tk4TYizyOKm126nJpXh6wD3XEnQ9NXdDo2ZNYXF3dQzCdb4nidj5k/LFfOHzlzUURPmSLfRNUlTzKQqR+aQIDAQAB",
   "description": "__MSG_extDescription__",
   "permissions": [
     "storage",

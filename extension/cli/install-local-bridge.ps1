@@ -35,7 +35,10 @@ Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'native-host.mjs') -Destination 
 $launcher=Join-Path $bridgeRoot 'host.cmd'
 [IO.File]::WriteAllText($launcher,('@echo off'+"`r`n"+'"'+$nodePath+'" "'+$hostScript+'"'+"`r`n"),[Text.Encoding]::ASCII)
 $manifestPath=Join-Path $bridgeRoot 'com.imageprompt.local.json'
-$manifestText=@{name='com.imageprompt.local';description='HoverPrompt local image and prompt cache';path=$launcher;type='stdio';allowed_origins=@("chrome-extension://$ExtensionId/")} | ConvertTo-Json
+# Extensions already allowed stay allowed (an older copy and the fixed-ID build of 3.10.13 can share the backup)
+$origins=@("chrome-extension://$ExtensionId/")
+if(Test-Path -LiteralPath $manifestPath){try{$origins=@(@((Get-Content -Raw -LiteralPath $manifestPath | ConvertFrom-Json).allowed_origins)+$origins | Where-Object {$_ -match '^chrome-extension://[a-p]{32}/$'} | Select-Object -Unique)}catch{}}
+$manifestText=@{name='com.imageprompt.local';description='HoverPrompt local image and prompt cache';path=$launcher;type='stdio';allowed_origins=$origins} | ConvertTo-Json
 [IO.File]::WriteAllText($manifestPath,$manifestText,(New-Object Text.UTF8Encoding $false))
 foreach($browserKey in @('HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.imageprompt.local','HKCU:\Software\Microsoft\Edge\NativeMessagingHosts\com.imageprompt.local')){New-Item -Path $browserKey -Force | Out-Null;Set-Item -Path $browserKey -Value $manifestPath}
 Write-Output "Installed HoverPrompt local bridge. Enable local cache in extension settings. Cache: $toolRoot\cache"

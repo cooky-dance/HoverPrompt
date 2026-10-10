@@ -125,6 +125,19 @@ Requires Chrome or Edge 111 or later. No build step: the extension is plain Java
 
 **ChatGPT Studio:** turn it on in **Settings → Plugins**, then open **Companion Studio** from the sidebar. The first time, sign in to ChatGPT in the window it opens.
 
+## Upgrade without losing your library
+
+From 3.10.13 the GitHub build has a fixed extension ID (`eimnpachdlgijdddmogpopdmemcckodm`), whatever folder it is loaded from. Your library, settings and API keys stay with that ID.
+
+- **Usual upgrade:** unzip the new version over your current extension folder (replace the files), then click **Reload** on HoverPrompt in `chrome://extensions` (or `edge://extensions`).
+- **Another folder is fine too:** unzip it anywhere and load that folder with **Load unpacked**; it is the same extension, so the data is still there.
+- **Never click Remove** — removing the extension deletes its library and settings. Before a big change, use Settings → Interface → **Backup and move** → Export full backup.
+
+**Moving from 3.10.12 or older (once):** older copies had an ID taken from their folder path, so the fixed-ID build starts empty. Move the data once:
+1. Unzip `hoverprompt-extension-3.10.13-migrate.zip` over the **old** extension folder and click **Reload** (this build keeps the old ID). Open Settings → Interface → **Backup and move** and export a full backup (tick “Include API keys” if you want them moved too).
+2. Unzip `hoverprompt-extension-3.10.13.zip` into a **new** folder, load it with **Load unpacked**, and import the backup in the same place.
+3. When the library and settings are all there, remove the old extension. Do not unzip the regular build over the old folder — the old data would no longer be reachable.
+
 ## Sign in (optional)
 
 Open the extension settings → **Account & sync** → **Sign in**. A page on hoverprompt.com opens; approve the device there (email code or GitHub). The extension then receives an access token for your account only — no password is stored in the extension. Sign out from the same page at any time.
