@@ -97,4 +97,13 @@
  // a double click on the toolbar icon opens the Library: a new tab at #library, or this tab by message (background.js)
  if(!embedded){chrome.runtime.onMessage?.addListener((message,sender,respond)=>{if(message?.type!=='OPEN_SETTINGS_PAGE'||sender?.tab)return;navigate(message.page);respond({page});});addEventListener('hashchange',()=>{if(location.hash==='#library')navigate('history');});}
  if(embedded){sidebar.hidden=true;top.hidden=true;document.body.classList.add('compact-layout');}
+ // Floating window: settings opened from it (e.g. "Account & sync" in the credits panel) cover the window and the
+ // window has no navigation, so they close with ×, Esc or a click outside the settings card.
+ if(embedded){
+  const settings=$('settings'),close=document.createElement('button');close.type='button';close.id='settingsClose';close.className='settings-close';close.textContent='×';
+  const label=()=>{const text=/^zh/.test(selector.value||'')?'关闭设置':'Close settings';close.title=text;close.setAttribute('aria-label',text);};label();selector.addEventListener('change',label);document.addEventListener('settings-page-changed',label);
+  close.onclick=()=>navigate('history');settings.prepend(close);
+  document.addEventListener('pointerdown',event=>{if(settings.hidden||settings.contains(event.target)||event.target.closest?.('.credits-overlay,dialog,.focus-pop,#saveToast'))return;navigate('history');},true);
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!settings.hidden&&!document.querySelector('dialog[open]')){event.preventDefault();navigate('history');}});
+ }
 })();

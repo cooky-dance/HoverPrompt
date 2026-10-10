@@ -1554,3 +1554,8 @@ body.embedded header #focusPop button{display:inline-flex!important;grid-templat
 body.embedded header .focus-chip-wrap{flex:none!important}
 body.embedded header #focusChip{flex:none!important}
 body.embedded header #focusChip span{display:none}body.embedded header .focus-chip-wrap button.focus-chip{padding:0 10px!important;gap:5px!important}
+/* floating window: close button of the settings card (layout.js) */
+.settings-close{display:none}
+.embedded #settings:not([hidden]){position:relative}
+.embedded #settings .settings-close{display:grid;place-items:center;position:sticky;top:0;float:right;z-index:5;width:30px!important;height:30px!important;min-height:0;margin:-4px -4px 0 8px;padding:0!important;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:18px!important;line-height:1;cursor:pointer}
+.embedded #settings .settings-close:hover,.embedded #settings .settings-close:focus-visible{background:var(--surface-2,var(--surface));outline:2px solid var(--accent,#7c6cff);outline-offset:1px}
